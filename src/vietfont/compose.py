@@ -53,8 +53,12 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
     if mark:
         mark = ensure_winding(mark, clockwise=is_clockwise(carrier))
 
-    shift = _tone_shift(carrier, mark, tone, grid) if mark else 0.0
-    shifted = translate(mark, 0, shift) if mark else []
+    # Với glyph 1 dấu, vật cản là x-height/cap-height của chữ nền; với glyph 2 dấu,
+    # vật cản là chính modifier nên dùng đỉnh mực của carrier.
+    obstacle = _letter_top(font, base) if modifier == "none" else None
+
+    shift = _tone_shift(carrier, mark, tone, grid, obstacle) if mark else 0.0
+    shifted = _dedupe(translate(mark, 0, shift), carrier) if mark else []
 
     # Hết chỗ: chữ HOA chiếm row 3-10, modifier row 0-1, chỉ còn 1 row trống mà
     # tone mark cần 2. Thu gọn modifier xuống 1 row để nhường chỗ cho tone.
@@ -63,8 +67,8 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
         if compact is not None:
             carrier = ensure_winding(compact, clockwise=is_clockwise(carrier))
             carrier_source = f"{carrier_source}+compact"
-            shift = _tone_shift(carrier, mark, tone, grid)
-            shifted = translate(mark, 0, shift)
+            shift = _tone_shift(carrier, mark, tone, grid, obstacle)
+            shifted = _dedupe(translate(mark, 0, shift), carrier)
 
     return Composition(
         char=char,
@@ -126,19 +130,53 @@ def _glyph_contours(font, char: str) -> list[Contour]:
     return read_contours(font[ord(char)])
 
 
-def _tone_shift(carrier: list[Contour], mark: list[Contour], tone: str, grid: Grid) -> float:
-    """Dịch mark lên vừa đủ để nằm trên mực của carrier, không vượt đỉnh lưới."""
+def _tone_shift(
+    carrier: list[Contour],
+    mark: list[Contour],
+    tone: str,
+    grid: Grid,
+    obstacle_top: float | None = None,
+) -> float:
+    """Dịch mark lên để chừa đúng 1 hàng lưới trên vật cản nằm dưới nó.
+
+    Vật cản là modifier (glyph 2 dấu) hoặc đỉnh chữ nền (glyph 1 dấu). Với glyph
+    1 dấu, đỉnh phải là x-height/cap-height chứ không phải mực trên cùng: chữ ``i``
+    có dấu chấm cao hơn x-height, và font gốc đặt dấu trên ``i`` ngang hàng với dấu
+    chấm chứ không phải trên nó. Không vượt đỉnh lưới.
+    """
     if tone == "dot_below":
         return 0.0
 
-    carrier_box = bounds(carrier)
     mark_box = bounds(mark)
-    if carrier_box is None or mark_box is None:
+    if mark_box is None:
         return 0.0
 
-    lift = carrier_box[3] - mark_box[1]
+    if obstacle_top is None:
+        carrier_box = bounds(carrier)
+        if carrier_box is None:
+            return 0.0
+        obstacle_top = carrier_box[3]
+
+    lift = obstacle_top + grid.pitch - mark_box[1]
     headroom = grid.top - mark_box[3]
     return max(0.0, min(lift, headroom))
+
+
+def _letter_top(font, base: str) -> float | None:
+    """Đỉnh mà tone mark phải vượt với glyph 1 dấu: x-height hoặc cap-height."""
+    value = font.os2_xheight if base.islower() else font.os2_capheight
+    return float(value) if value else None
+
+
+def _dedupe(mark: list[Contour], carrier: list[Contour]) -> list[Contour]:
+    """Bỏ contour của mark trùng khít với contour đã có trong carrier.
+
+    Chữ ``i`` có dấu chấm nằm đúng chỗ pixel dưới cùng của dấu. Font gốc gộp hai
+    thứ làm một; nếu ta thêm contour thứ hai trùng khít thì fontforge coi đó là
+    contour lồng nhau, lật chiều, và mất mực.
+    """
+    existing = {frozenset(points) for points in carrier}
+    return [points for points in mark if frozenset(points) not in existing]
 
 
 def _collisions(carrier: list[Contour], mark: list[Contour]) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
