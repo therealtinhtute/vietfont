@@ -23,6 +23,8 @@ class MarkPack:
     marks: dict[str, list[Contour]] = field(default_factory=dict)
     #: Tên modifier -> ký tự base -> contour của modifier.
     modifiers: dict[str, dict[str, list[Contour]]] = field(default_factory=dict)
+    #: Modifier thu gọn 1 hàng, dùng khi lưới hết chỗ (chữ HOA 2-mark).
+    compact_modifiers: dict[str, list[Contour]] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path) -> "MarkPack":
@@ -33,6 +35,9 @@ class MarkPack:
                 mod: {base: _to_contours(cs) for base, cs in bases.items()}
                 for mod, bases in raw.get("modifiers", {}).items()
             },
+            compact_modifiers={
+                mod: _to_contours(cs) for mod, cs in raw.get("compact_modifiers", {}).items()
+            },
         )
 
     def save(self, path: str | Path) -> None:
@@ -41,6 +46,9 @@ class MarkPack:
             "modifiers": {
                 mod: {base: _from_contours(cs) for base, cs in bases.items()}
                 for mod, bases in self.modifiers.items()
+            },
+            "compact_modifiers": {
+                mod: _from_contours(cs) for mod, cs in self.compact_modifiers.items()
             },
         }
         Path(path).write_text(
@@ -52,6 +60,9 @@ class MarkPack:
 
     def modifier(self, modifier: str, base: str) -> list[Contour] | None:
         return self.modifiers.get(modifier, {}).get(base)
+
+    def compact_modifier(self, modifier: str) -> list[Contour] | None:
+        return self.compact_modifiers.get(modifier)
 
 
 def _to_contours(raw: list) -> list[Contour]:

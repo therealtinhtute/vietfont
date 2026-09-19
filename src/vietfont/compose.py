@@ -10,7 +10,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from vietfont import charset as cs
-from vietfont.glyph import Contour, bounds, contours as read_contours, translate
+from vietfont.glyph import (
+    Contour,
+    bounds,
+    contours as read_contours,
+    ensure_winding,
+    is_clockwise,
+    translate,
+)
 from vietfont.grid import Grid
 from vietfont.marks import MarkPack
 
@@ -41,8 +48,23 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
     carrier, carrier_source = _carrier(font, base, modifier, pack)
     mark, tone_source = _tone(font, tone, pack)
 
+    # Mark phải quay cùng chiều với carrier, nếu không phần chồng sẽ bị quy tắc
+    # nonzero winding triệt tiêu và mất mực.
+    if mark:
+        mark = ensure_winding(mark, clockwise=is_clockwise(carrier))
+
     shift = _tone_shift(carrier, mark, tone, grid) if mark else 0.0
     shifted = translate(mark, 0, shift) if mark else []
+
+    # Hết chỗ: chữ HOA chiếm row 3-10, modifier row 0-1, chỉ còn 1 row trống mà
+    # tone mark cần 2. Thu gọn modifier xuống 1 row để nhường chỗ cho tone.
+    if mark and _collisions(carrier, shifted):
+        compact = _compact_carrier(font, base, modifier, pack)
+        if compact is not None:
+            carrier = ensure_winding(compact, clockwise=is_clockwise(carrier))
+            carrier_source = f"{carrier_source}+compact"
+            shift = _tone_shift(carrier, mark, tone, grid)
+            shifted = translate(mark, 0, shift)
 
     return Composition(
         char=char,
@@ -53,6 +75,19 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
         shift=shift,
         collisions=_collisions(carrier, shifted),
     )
+
+
+def _compact_carrier(font, base: str, modifier: str, pack: MarkPack) -> list[Contour] | None:
+    """Dựng lại carrier với modifier thu gọn 1 hàng, đặt ngay trên mực chữ nền."""
+    compact = pack.compact_modifier(modifier)
+    if compact is None:
+        return None
+    base_contours = _glyph_contours(font, base)
+    base_box = bounds(base_contours)
+    modifier_box = bounds(compact)
+    if base_box is None or modifier_box is None:
+        return None
+    return base_contours + translate(compact, 0, base_box[3] - modifier_box[1])
 
 
 def _carrier(font, base: str, modifier: str, pack: MarkPack) -> tuple[list[Contour], str]:

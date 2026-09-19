@@ -50,3 +50,38 @@ def is_rectangular(contours: list[Contour]) -> bool:
     Dùng để phát hiện glyph bị flatten: contour nhiều điểm bị vẽ lại thành 4 điểm.
     """
     return all(len(points) == 4 for points in contours)
+
+
+def signed_area(points: Contour) -> float:
+    """Diện tích có dấu. Âm = chiều kim đồng hồ, dương = ngược lại."""
+    total = 0.0
+    count = len(points)
+    for i in range(count):
+        x0, y0 = points[i]
+        x1, y1 = points[(i + 1) % count]
+        total += x0 * y1 - x1 * y0
+    return total / 2
+
+
+def is_clockwise(contours: list[Contour]) -> bool:
+    """Chiều quay của contour lớn nhất — quy ước chiều của cả glyph."""
+    if not contours:
+        return True
+    biggest = max(contours, key=lambda points: abs(signed_area(points)))
+    return signed_area(biggest) < 0
+
+
+def ensure_winding(contours: list[Contour], clockwise: bool = True) -> list[Contour]:
+    """Đảo chiều contour nếu cần để khớp quy ước của glyph đích.
+
+    Quan trọng khi contour chồng lên nhau: quy tắc nonzero winding triệt tiêu
+    phần chồng nếu hai contour quay ngược chiều, làm mất mực (xem
+    ``docs/research/mark-pack-winding.md``).
+    """
+    out = []
+    for points in contours:
+        if (signed_area(points) < 0) != clockwise:
+            out.append(list(reversed(points)))
+        else:
+            out.append(points)
+    return out
