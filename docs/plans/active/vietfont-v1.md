@@ -132,6 +132,15 @@ nhau khi `generate()`. Chi tiết: `docs/research/contour-nesting.md`.
 
 Kết quả: **0 cặp contour chồng nhau**, base letter vẫn giữ nguyên contour 134/134.
 
+**Đã sửa thêm (Phase 2.5)**: dấu dính sát chữ nền. Convention thật của font là **dải cố
+định** — chữ thường dấu ở hàng 2–3, chữ hoa hàng 0–1 — tức `đáy_dấu = x-height/cap-height
++ 1 hàng`. Sau khi sửa: **130/134 glyph có gap 1** (trước 118), 0 glyph mất mực.
+Chi tiết + bẫy chữ `i`: `docs/research/mark-placement.md`.
+
+Còn đúng 4 glyph gap 0: `Ắ Ằ Ẳ Ẵ` — chữ HOA chiếm hàng 3–10, phía trên còn 3 hàng, cần 4.
+Hết chỗ thật; hai phương án còn lại (dấu nén 1 hàng → acute/grave trùng pixel; tăng ascent
+→ đổi line height toàn font) đều đắt hơn lợi.
+
 ## 5. Phases
 
 ### Phase 0 — Repo + migrate ✅
