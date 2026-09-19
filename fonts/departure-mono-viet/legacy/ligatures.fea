@@ -1,0 +1,30 @@
+languagesystem DFLT dflt;
+
+feature liga {
+    sub period period period by period_period_period;
+    sub exclam equal equal by exclam_equal_equal;
+    sub exclam equal by exclam_equal;
+    sub asterisk asterisk asterisk asterisk by star_star_star_star;
+    sub asterisk asterisk asterisk by asterisk_asterisk_asterisk;
+    sub asterisk slash by asterisk_slash;
+    sub asterisk asterisk by asterisk_asterisk;
+    sub slash greater by slash_greater;
+    sub slash asterisk by slash_asterisk;
+    sub hyphen hyphen greater by hyphen_hyphen_greater;
+    sub hyphen hyphen hyphen by hyphen_hyphen_hyphen;
+    sub hyphen hyphen by hyphen_hyphen;
+    sub hyphen greater by hyphen_greater;
+    sub underscore underscore by underscore_underscore;
+    sub ampersand ampersand by ampersand_ampersand;
+    sub plus plus by plus_plus;
+    sub equal equal equal by equal_equal_equal;
+    sub equal equal by equal_equal;
+    sub equal greater by equal_greater;
+    sub greater greater by greater_greater;
+    sub greater equal by greater_equal;
+    sub less exclam hyphen hyphen by less_exclam_hyphen_hyphen;
+    sub less hyphen by less_hypen;
+    sub less slash by less_slash;
+    sub less less by less_less;
+    sub less equal by less_equal;
+} liga;
