@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vietfont"
+version = "0.1.0"
+description = "Việt hoá font pixel/bitmap: code dựng glyph, Jev phán, người duyệt ca khó"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fonttools>=4.65",
+    "typesafe-sdk>=0.7",
+]
+
+[project.scripts]
+vietfont = "vietfont.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vietfont"]
