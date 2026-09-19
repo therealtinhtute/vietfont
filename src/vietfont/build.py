@@ -8,6 +8,7 @@ from pathlib import Path
 from vietfont.analyze import analyze
 from vietfont.compose import ComposeError, compose
 from vietfont.glyph import Contour, set_contours
+from vietfont.grid import reference_advance
 from vietfont.marks import MarkPack
 
 
@@ -77,7 +78,4 @@ def save(font, path: str | Path) -> None:
 
 def _reference_width(font) -> float:
     """Bề rộng chuẩn của font (monospace) — lấy từ glyph có sẵn."""
-    for char in "aoO":
-        if ord(char) in font:
-            return float(font[ord(char)].width)
-    raise ValueError("không tìm được glyph tham chiếu để lấy bề rộng")
+    return float(reference_advance(font))

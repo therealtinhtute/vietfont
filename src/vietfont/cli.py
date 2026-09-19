@@ -15,6 +15,7 @@ from vietfont.grid import Grid
 from vietfont.judge import ADVISORY_THRESHOLD, verify_marks
 from vietfont.marks import MarkPack
 from vietfont.proof import LAYOUTS, ProofFont, ProofSheet
+from vietfont.verify import verify
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -67,6 +68,13 @@ def main(argv: list[str] | None = None) -> int:
         help="kiểu trình bày proof sheet",
     )
 
+    verify_cmd = commands.add_parser(
+        "verify", help="kiểm font đã Việt hoá: coverage, shape chữ nền, mực"
+    )
+    verify_cmd.add_argument("font", help="đường dẫn font cần kiểm")
+    verify_cmd.add_argument("--source", help="font gốc, để kiểm shape và mực")
+    verify_cmd.add_argument("--marks", help="mark pack JSON, để kiểm mực và va chạm")
+
     args = parser.parse_args(argv)
     if args.command == "analyze":
         return _run_analyze(args)
@@ -76,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_judge(args)
     if args.command == "proof":
         return _run_proof(args)
+    if args.command == "verify":
+        return _run_verify(args)
 
     parser.print_help()
     return 0
@@ -177,6 +187,47 @@ def _run_proof(args: argparse.Namespace) -> int:
     if flagged:
         print(f"glyph va chạm: {len(flagged)} — {' '.join(flagged)}")
     return 0
+
+
+def _run_verify(args: argparse.Namespace) -> int:
+    font = fontforge.open(args.font)
+    source = fontforge.open(args.source) if args.source else None
+    pack = MarkPack.load(args.marks) if args.marks else None
+
+    report = verify(font, source=source, pack=pack)
+
+    print(f"font     : {args.font}")
+    print(f"coverage : {len(report.present)}/{report.total}")
+    if report.missing:
+        print(f"           thiếu: {''.join(report.missing)}")
+
+    if source is not None:
+        kept = len(report.present) - len(report.flattened)
+        print(f"shape    : {kept}/{len(report.present)} glyph giữ contour chữ nền")
+        if report.flattened:
+            print(f"           flatten: {''.join(report.flattened)}")
+        if report.gaps:
+            spread = ", ".join(
+                f"{gap} hàng × {n}" for gap, n in sorted(report.gaps.items())
+            )
+            print(f"khoảng dấu: {spread}")
+
+    if source is not None and pack is not None:
+        if report.ink_diff:
+            print(f"mực      : {len(report.ink_diff)} glyph lệch thiết kế")
+            for char, (lost, added) in sorted(report.ink_diff.items()):
+                print(f"           {char}  mất {lost} pixel, thêm {added}")
+        else:
+            print("mực      : khớp thiết kế")
+        if report.collisions:
+            print(f"va chạm  : {len(report.collisions)} glyph có dấu đè chữ nền")
+            print(f"           {' '.join(sorted(report.collisions))}")
+        else:
+            print("va chạm  : không có")
+
+    print()
+    print("ĐẠT" if report.ok else "KHÔNG ĐẠT")
+    return 0 if report.ok else 1
 
 
 if __name__ == "__main__":
