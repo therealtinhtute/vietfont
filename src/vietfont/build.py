@@ -57,6 +57,20 @@ def extend(font, pack: MarkPack, report: BuildReport | None = None) -> BuildRepo
     return report
 
 
+def collisions(font, pack: MarkPack) -> dict[str, int]:
+    """Quét glyph còn thiếu và trả về những cái có dấu đè lên chữ nền (không sửa font)."""
+    analysis = analyze(font)
+    found: dict[str, int] = {}
+    for char in analysis.missing:
+        try:
+            result = compose(font, char, pack, analysis.grid)
+        except ComposeError:
+            continue
+        if result.collisions:
+            found[char] = len(result.collisions)
+    return found
+
+
 def save(font, path: str | Path) -> None:
     """Xuất font ra file."""
     font.generate(str(path))
