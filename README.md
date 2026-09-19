@@ -61,13 +61,20 @@ Bốn lệnh:
 
 ```bash
 vietfont analyze <font>                          # đo độ phủ tiếng Việt
-vietfont add <font> -o <out> --marks <pack>      # dựng ký tự còn thiếu
+vietfont add <font> -o <out> --marks <pack> --family "Departure Mono Viet"
 vietfont verify <out> --source <font> --marks <pack>   # kiểm: coverage, shape, mực
 vietfont proof <out> -o proof.html --layout columns    # proof sheet để duyệt bằng mắt
 ```
 
 `verify` là cổng: exit code khác 0 khi font thiếu ký tự, bị flatten chữ nền, lệch mực,
 hoặc có dấu đè chữ nền.
+
+`--family` đổi tên family của font xuất. **Cần dùng khi cài song song font gốc** — hai font
+cùng tên family thì hệ điều hành chỉ giữ một. Lệnh ghi lại cả nameID 16 (typographic family),
+không chỉ nameID 1.
+
+Font gốc là **SIL OFL 1.1**: bản phái sinh giữ nguyên thông báo bản quyền và giấy phép,
+chỉ thêm một dòng ghi chú phái sinh.
 
 `fontforge` là module hệ thống (không cài qua pip) — venv phải tạo bằng
 `--system-site-packages` từ python homebrew.
