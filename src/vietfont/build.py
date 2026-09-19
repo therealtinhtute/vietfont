@@ -71,6 +71,47 @@ def collisions(font, pack: MarkPack) -> dict[str, int]:
     return found
 
 
+def rename(
+    path: str | Path, family: str, *, style: str = "Regular", note: str | None = None
+) -> None:
+    """Ghi lại name table của file font để bản phái sinh không đè lên font gốc.
+
+    Cài hai font cùng tên family vào một máy là hỏng: hệ điều hành chỉ giữ một.
+    Phải sửa cả nameID 16 (typographic family) — fontforge chỉ đặt nameID 1, nên
+    macOS vẫn hiện family cũ.
+
+    Font gốc là SIL OFL 1.1: giữ nguyên thông báo bản quyền, chỉ thêm ghi chú phái sinh.
+    """
+    from fontTools.ttLib import TTFont
+
+    font = TTFont(str(path))
+    postscript = f"{family.replace(' ', '')}-{style}"
+    updates = {
+        1: family,  # Family
+        2: style,  # Subfamily
+        3: f"1.500;UKWN;{postscript}",  # Unique ID
+        4: f"{family} {style}",  # Full name
+        6: postscript,  # PostScript name
+        16: family,  # Typographic family
+        17: style,  # Typographic subfamily
+    }
+    if note:
+        for record in font["name"].names:
+            if record.nameID == 0:
+                updates[0] = f"{record.toUnicode()}. {note}"
+
+    for record in list(font["name"].names):
+        if record.nameID in updates:
+            font["name"].setName(
+                updates[record.nameID],
+                record.nameID,
+                record.platformID,
+                record.platEncID,
+                record.langID,
+            )
+    font.save(str(path))
+
+
 def save(font, path: str | Path) -> None:
     """Xuất font ra file."""
     font.generate(str(path))
