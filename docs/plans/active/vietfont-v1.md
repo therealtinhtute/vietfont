@@ -124,8 +124,13 @@ không chỉ tính pass rate tổng — nếu nhóm này fail thì font hỏng �
 ```
 
 Nguyên nhân: chữ HOA chiếm row 3–10, modifier chiếm row 0–1, chỉ còn **1 row trống** (row 2)
-trong khi tone mark cần 2 row. Không có chỗ hợp lệ — đây là bài toán thiết kế thật, không
-phải lỗi code. Phase 2/3 phải giải: vẽ mark nhỏ hơn, hạ modifier xuống, hay chấp nhận merge.
+trong khi tone mark cần 2 row.
+
+**Đã giải**: thu gọn modifier xuống 1 row cho nhóm HOA 2-mark, nhường row 0–1 cho tone mark.
+Chồng lấn không chỉ xấu về thiết kế mà còn **mất mực** — fontforge lật chiều contour lồng
+nhau khi `generate()`. Chi tiết: `docs/research/contour-nesting.md`.
+
+Kết quả: **0 cặp contour chồng nhau**, base letter vẫn giữ nguyên contour 134/134.
 
 ## 5. Phases
 
@@ -178,7 +183,8 @@ phải lỗi code. Phase 2/3 phải giải: vẽ mark nhỏ hơn, hạ modifier 
 | outline font | ngoài scope v1 |
 | grid detection sai | cho override bằng CLI flag |
 | **Jev không đọc nổi glyph pixel** (đã xảy ra — 62%) | cổng verify chuyển sang kiểm tra tất định; Jev chỉ tham khảo; người duyệt qua proof sheet |
-| nhóm HOA 2-mark không đủ chỗ trong lưới | đã phát hiện + báo cáo; cần giải pháp thiết kế ở Phase 3 |
+| nhóm HOA 2-mark không đủ chỗ trong lưới | **đã giải**: modifier thu gọn 1 row; 0 chồng lấn, base giữ nguyên 134/134 |
+| contour chồng nhau bị mất mực | phát hiện chồng lấn trong `compose`; chuẩn hoá chiều contour; xem `docs/research/contour-nesting.md` |
 
 ## 7. Ngoài scope v1
 
