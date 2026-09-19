@@ -23,6 +23,8 @@ class ComposeError(Exception):
 class Composition:
     char: str
     contours: list[Contour]
+    #: Contour của riêng tone mark, đã áp dịch — dùng để crop vùng mark khi hỏi Jev.
+    mark_contours: list[Contour]
     #: Nguồn của carrier: ``font`` (glyph base+modifier có sẵn) hoặc ``pack``.
     carrier_source: str
     #: Nguồn của tone mark: ``font``, ``pack``, hoặc ``none``.
@@ -45,6 +47,7 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
     return Composition(
         char=char,
         contours=carrier + shifted,
+        mark_contours=shifted,
         carrier_source=carrier_source,
         tone_source=tone_source,
         shift=shift,

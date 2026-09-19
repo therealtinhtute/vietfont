@@ -11,6 +11,8 @@ from vietfont import __version__
 from vietfont import charset as cs
 from vietfont.analyze import analyze
 from vietfont.build import extend, save
+from vietfont.grid import Grid
+from vietfont.judge import ADVISORY_THRESHOLD, verify_marks
 from vietfont.marks import MarkPack
 
 
@@ -30,11 +32,19 @@ def main(argv: list[str] | None = None) -> int:
     add_cmd.add_argument("-o", "--output", required=True, help="đường dẫn font xuất")
     add_cmd.add_argument("--marks", help="mark pack JSON cho mark/modifier mà font thiếu")
 
+    judge_cmd = commands.add_parser(
+        "judge", help="hỏi Jev về tone mark — tín hiệu tham khảo, không phải cổng verify"
+    )
+    judge_cmd.add_argument("font", help="đường dẫn font cần kiểm")
+    judge_cmd.add_argument("--marks", required=True, help="mark pack JSON")
+
     args = parser.parse_args(argv)
     if args.command == "analyze":
         return _run_analyze(args)
     if args.command == "add":
         return _run_add(args)
+    if args.command == "judge":
+        return _run_judge(args)
 
     parser.print_help()
     return 0
@@ -76,6 +86,27 @@ def _run_add(args: argparse.Namespace) -> int:
             print(f"           {char}  {reason}")
     print(f"xuất     : {args.output}")
     return 0 if report.ok else 1
+
+
+def _run_judge(args: argparse.Namespace) -> int:
+    font = fontforge.open(args.font)
+    pack = MarkPack.load(args.marks)
+    grid = Grid.detect(font)
+
+    results = verify_marks(font, grid, pack)
+    agree = sum(j.agrees for j in results)
+    unsure = [j for j in results if not j.trustworthy]
+
+    print(f"font     : {args.font}")
+    print(f"đã hỏi   : {len(results)} glyph có thanh điệu")
+    print(f"đồng ý   : {agree}/{len(results)} ({100 * agree / len(results):.0f}%)")
+    print(f"conf thấp: {len(unsure)} glyph (dưới {ADVISORY_THRESHOLD})")
+    print()
+    print("LƯU Ý: Jev chỉ đạt ~80% ở câu hỏi này — đây là tín hiệu tham khảo để xếp hạng")
+    print("glyph cho người xem, KHÔNG phải cổng verify. Xem docs/research/jev-verification-limits.md")
+    if unsure:
+        print(f"\nglyph nên xem trước: {' '.join(j.char for j in unsure)}")
+    return 0
 
 
 if __name__ == "__main__":
