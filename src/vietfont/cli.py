@@ -22,7 +22,9 @@ def main(argv: list[str] | None = None) -> int:
         prog="vietfont",
         description="Việt hoá font pixel/bitmap: code dựng glyph, Jev phán, người duyệt ca khó.",
     )
-    parser.add_argument("--version", action="version", version=f"vietfont {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"vietfont {__version__}"
+    )
     commands = parser.add_subparsers(dest="command")
 
     analyze_cmd = commands.add_parser("analyze", help="đo độ phủ tiếng Việt của font")
@@ -31,25 +33,38 @@ def main(argv: list[str] | None = None) -> int:
     add_cmd = commands.add_parser("add", help="dựng các ký tự tiếng Việt còn thiếu")
     add_cmd.add_argument("font", help="đường dẫn font nguồn")
     add_cmd.add_argument("-o", "--output", required=True, help="đường dẫn font xuất")
-    add_cmd.add_argument("--marks", help="mark pack JSON cho mark/modifier mà font thiếu")
+    add_cmd.add_argument(
+        "--marks", help="mark pack JSON cho mark/modifier mà font thiếu"
+    )
 
     judge_cmd = commands.add_parser(
-        "judge", help="hỏi Jev về tone mark — tín hiệu tham khảo, không phải cổng verify"
+        "judge",
+        help="hỏi Jev về tone mark — tín hiệu tham khảo, không phải cổng verify",
     )
     judge_cmd.add_argument("font", help="đường dẫn font cần kiểm")
     judge_cmd.add_argument("--marks", required=True, help="mark pack JSON")
 
-    proof_cmd = commands.add_parser("proof", help="xuất proof sheet HTML để duyệt bằng mắt")
+    proof_cmd = commands.add_parser(
+        "proof", help="xuất proof sheet HTML để duyệt bằng mắt"
+    )
     proof_cmd.add_argument("font", help="đường dẫn font cần duyệt")
     proof_cmd.add_argument("-o", "--output", required=True, help="đường dẫn HTML xuất")
     proof_cmd.add_argument("--label", default="vietfont", help="nhãn của font chính")
     proof_cmd.add_argument(
-        "--compare", action="append", default=[], help="font khác để đặt cạnh (lặp lại được)"
+        "--compare",
+        action="append",
+        default=[],
+        help="font khác để đặt cạnh (lặp lại được)",
     )
     proof_cmd.add_argument("--marks", help="mark pack JSON, để quét glyph có va chạm")
-    proof_cmd.add_argument("--source", help="font gốc để quét va chạm (mặc định: chính font đang duyệt)")
     proof_cmd.add_argument(
-        "--layout", default="columns", choices=LAYOUTS, help="kiểu trình bày proof sheet"
+        "--source", help="font gốc để quét va chạm (mặc định: chính font đang duyệt)"
+    )
+    proof_cmd.add_argument(
+        "--layout",
+        default="columns",
+        choices=LAYOUTS,
+        help="kiểu trình bày proof sheet",
     )
 
     args = parser.parse_args(argv)
@@ -72,8 +87,12 @@ def _run_analyze(args: argparse.Namespace) -> int:
     total = len(cs.charset())
 
     print(f"font     : {args.font}")
-    print(f"lưới     : {result.grid.cols}×{result.grid.rows} ô, pitch {result.grid.pitch}, đỉnh {result.grid.top}")
-    print(f"tiếng Việt: {len(result.present)}/{total} có sẵn, thiếu {len(result.missing)}")
+    print(
+        f"lưới     : {result.grid.cols}×{result.grid.rows} ô, pitch {result.grid.pitch}, đỉnh {result.grid.top}"
+    )
+    print(
+        f"tiếng Việt: {len(result.present)}/{total} có sẵn, thiếu {len(result.missing)}"
+    )
     if result.missing_carriers:
         print(f"thiếu carrier: {''.join(result.missing_carriers)}")
     if result.missing_marks:
@@ -110,6 +129,11 @@ def _run_judge(args: argparse.Namespace) -> int:
     grid = Grid.detect(font)
 
     results = verify_marks(font, grid, pack)
+    if not results:
+        print(f"font     : {args.font}")
+        print("không có glyph nào có thanh điệu — chạy `vietfont add` trước")
+        return 1
+
     agree = sum(j.agrees for j in results)
     unsure = [j for j in results if not j.trustworthy]
 
@@ -118,8 +142,12 @@ def _run_judge(args: argparse.Namespace) -> int:
     print(f"đồng ý   : {agree}/{len(results)} ({100 * agree / len(results):.0f}%)")
     print(f"conf thấp: {len(unsure)} glyph (dưới {ADVISORY_THRESHOLD})")
     print()
-    print("LƯU Ý: Jev chỉ đạt ~80% ở câu hỏi này — đây là tín hiệu tham khảo để xếp hạng")
-    print("glyph cho người xem, KHÔNG phải cổng verify. Xem docs/research/jev-verification-limits.md")
+    print(
+        "LƯU Ý: Jev chỉ đạt ~80% ở câu hỏi này — đây là tín hiệu tham khảo để xếp hạng"
+    )
+    print(
+        "glyph cho người xem, KHÔNG phải cổng verify. Xem docs/research/jev-verification-limits.md"
+    )
     if unsure:
         print(f"\nglyph nên xem trước: {' '.join(j.char for j in unsure)}")
     return 0

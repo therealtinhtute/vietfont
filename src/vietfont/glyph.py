@@ -44,14 +44,6 @@ def bounds(contours: list[Contour]) -> tuple[float, float, float, float] | None:
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def is_rectangular(contours: list[Contour]) -> bool:
-    """True nếu mọi contour đều là hình chữ nhật 4 điểm.
-
-    Dùng để phát hiện glyph bị flatten: contour nhiều điểm bị vẽ lại thành 4 điểm.
-    """
-    return all(len(points) == 4 for points in contours)
-
-
 def signed_area(points: Contour) -> float:
     """Diện tích có dấu. Âm = chiều kim đồng hồ, dương = ngược lại."""
     total = 0.0

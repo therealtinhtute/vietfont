@@ -109,19 +109,16 @@ def _body_stack(sheet: ProofSheet) -> str:
 
 def _body_columns(sheet: ProofSheet) -> str:
     header = "".join(f"<th>{font.label}</th>" for font in sheet.fonts)
-    grid_rows = "".join(
-        "<tr><th class='rowlabel'>{}</th>{}</tr>".format(
-            index + 1,
-            "".join(f"<td>{_grid(i, 'grid grid--tight')}</td>" for i in range(len(sheet.fonts))),
-        )
-        for index in range(1)
+    grids = "".join(
+        f"<td>{_grid(i, 'grid grid--tight')}</td>" for i in range(len(sheet.fonts))
     )
+    samples = "".join(f"<td>{_samples(i)}</td>" for i in range(len(sheet.fonts)))
     return (
         f"<h2>So sánh trực tiếp</h2>"
         f"<table class='compare'><thead><tr><th></th>{header}</tr></thead>"
-        f"<tbody>{grid_rows}</tbody></table>"
+        f"<tbody><tr>{grids}</tr></tbody></table>"
         f"<h2>Câu mẫu</h2>"
-        f"<table class='compare'><tbody><tr>{''.join(f'<td>{_samples(i)}</td>' for i in range(len(sheet.fonts)))}</tr></tbody></table>"
+        f"<table class='compare'><tbody><tr>{samples}</tr></tbody></table>"
     )
 
 

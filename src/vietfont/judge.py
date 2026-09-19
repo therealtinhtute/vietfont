@@ -17,7 +17,8 @@ from typesafe_sdk import Choice, TypeSafeClient
 
 from vietfont import charset as cs
 from vietfont.compose import compose
-from vietfont.glyph import Contour, bounds, contours as read_contours
+from vietfont.glyph import Contour, bounds
+from vietfont.glyph import contours as read_contours
 from vietfont.grid import Grid
 from vietfont.marks import MarkPack
 from vietfont.render import rasterize
@@ -44,7 +45,7 @@ class Vocabulary:
     tones: dict[str, str]
 
     @classmethod
-    def from_font(cls, font, grid: Grid, pack: MarkPack) -> "Vocabulary":
+    def from_font(cls, font, grid: Grid, pack: MarkPack) -> Vocabulary:
         def render(contours: list[Contour]) -> str:
             return "\n".join(rasterize(contours, grid))
 
@@ -87,8 +88,15 @@ def verify_marks(
     batch: int = DEFAULT_BATCH,
     client: TypeSafeClient | None = None,
 ) -> list[MarkJudgment]:
-    """Hỏi Jev về tone mark của từng ký tự có thanh điệu trong ``chars``."""
-    chars = [c for c in (chars if chars is not None else cs.charset()) if cs.decompose(c)[2] != "none"]
+    """Hỏi Jev về tone mark của từng ký tự có thanh điệu trong ``chars``.
+
+    Ký tự font chưa có bị bỏ qua — chạy ``vietfont add`` trước nếu muốn kiểm cả bộ.
+    """
+    chars = [
+        char
+        for char in (chars if chars is not None else cs.charset())
+        if cs.decompose(char)[2] != "none" and ord(char) in font
+    ]
     vocabulary = Vocabulary.from_font(font, grid, pack)
     owns_client = client is None
     client = client or TypeSafeClient()
@@ -97,7 +105,15 @@ def verify_marks(
     try:
         for start in range(0, len(chars), batch):
             results.extend(
-                _verify_batch(client, font, grid, pack, vocabulary, chars[start : start + batch], model)
+                _verify_batch(
+                    client,
+                    font,
+                    grid,
+                    pack,
+                    vocabulary,
+                    chars[start : start + batch],
+                    model,
+                )
             )
     finally:
         if owns_client:
@@ -124,12 +140,15 @@ def mark_crop(font, grid: Grid, pack: MarkPack, char: str) -> str:
     return "\n".join(lines[row] for row in rows)
 
 
-def _verify_batch(client, font, grid, pack, vocabulary, chars, model) -> list[MarkJudgment]:
+def _verify_batch(
+    client, font, grid, pack, vocabulary, chars, model
+) -> list[MarkJudgment]:
     state = {
         "font": f"pixel font, {grid.cols} wide x {grid.rows} tall grid, '#' = ink, '.' = empty",
         "tones": vocabulary.tones,
         "glyphs": [
-            {"id": f"g{i}", "crop": mark_crop(font, grid, pack, char)} for i, char in enumerate(chars)
+            {"id": f"g{i}", "crop": mark_crop(font, grid, pack, char)}
+            for i, char in enumerate(chars)
         ],
     }
     questions = {
