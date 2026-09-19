@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     proof_cmd.add_argument("--marks", help="mark pack JSON, để quét glyph có va chạm")
     proof_cmd.add_argument("--source", help="font gốc để quét va chạm (mặc định: chính font đang duyệt)")
     proof_cmd.add_argument(
-        "--layout", default="stack", choices=LAYOUTS, help="kiểu trình bày proof sheet"
+        "--layout", default="columns", choices=LAYOUTS, help="kiểu trình bày proof sheet"
     )
 
     args = parser.parse_args(argv)
