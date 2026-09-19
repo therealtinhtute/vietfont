@@ -38,6 +38,19 @@ Ba kết luận chi phối thiết kế:
 
 Chi phí: 72 câu ≈ 7k input token ≈ **$0.0003** (output free). Pass 134 glyph ≈ $0.001.
 
+> **Cảnh báo về ground truth** (phát hiện ở Phase 1): `DepartureMono-Viet.otf` **không phải
+> tham chiếu đúng**. Toàn bộ 76 glyph do pipeline tay tạo ra đã bị **flatten base letter**
+> — `rects_of()` lấy bounding box của contour rồi vẽ lại thành hình chữ nhật, phá shape của
+> mọi base có contour không phải hình chữ nhật (`a` mất 55% diện tích, `e i u A E I đ` tương tự).
+> `ả` trong bản tay làm là một **khối đặc**, không phải chữ `a` có móc.
+> Chi tiết + cách kiểm: `docs/research/ground-truth-flattening.md`.
+>
+> Hệ quả: ground truth vẫn dùng được làm **nguồn quyết định thiết kế** (shape mark, vị trí đặt)
+> và **baseline để vượt**, nhưng không dùng làm chuẩn đúng. Các thí nghiệm Jev ở trên render
+> bằng bbox-fill nên phần nhận diện *base letter* chạy trên khối đặc — kết quả nhận diện
+> *tone mark* vẫn giá trị (mark là hình chữ nhật), nhưng phải chạy lại bằng rasterizer thật
+> ở Phase 2.
+
 ## 3. Kiến trúc
 
 ```
@@ -97,18 +110,34 @@ cụ thể `hook_above` và `tilde` trên `ă â ê ô`:
 Đây là 12 glyph (6 lower + 6 upper) trong nhóm 2-mark. Phase 1 và 3 phải verify riêng nhóm này,
 không chỉ tính pass rate tổng — nếu nhóm này fail thì font hỏng đúng chỗ người dùng nhìn thấy.
 
+**Phase 1 xác nhận: nhóm HOA không đủ chỗ.** Tool dựng đúng contour nhưng phát hiện
+**10 glyph HOA bị dấu đè lên chữ nền**:
+
+```
+Ắ Ằ Ẳ Ẵ   (Ă + thanh)      Ẩ Ẫ   (Â + thanh)
+Ể Ễ        (Ê + thanh)      Ổ Ỗ   (Ô + thanh)
+```
+
+Nguyên nhân: chữ HOA chiếm row 3–10, modifier chiếm row 0–1, chỉ còn **1 row trống** (row 2)
+trong khi tone mark cần 2 row. Không có chỗ hợp lệ — đây là bài toán thiết kế thật, không
+phải lỗi code. Phase 2/3 phải giải: vẽ mark nhỏ hơn, hạ modifier xuống, hay chấp nhận merge.
+
 ## 5. Phases
 
-### Phase 0 — Repo + migrate
-- [ ] migrate `departure-mono-viet` → `fonts/departure-mono-viet/` (`font-src/`, `research/`, `build/`, `scripts/` → `legacy/`)
-- [ ] `pyproject.toml` + venv + deps
-- **Acceptance**: `vietfont --version` chạy; font cũ build lại được bằng legacy scripts
+### Phase 0 — Repo + migrate ✅
+- [x] migrate `departure-mono-viet` → `fonts/departure-mono-viet/` (`font-src/`, `research/`, `build/`, `scripts/` → `legacy/`)
+- [x] `pyproject.toml` + venv + deps
+- **Kết quả**: legacy pipeline tái lập ground truth chính xác (134 glyph, 0 differ);
+  `vietfont --version` chạy; stack fontforge + fontTools + typesafe-sdk OK
 
-### Phase 1 — Deterministic core (chưa AI)
-- [ ] `analyze`: coverage diff + inventory + grid detect
-- [ ] `extract`: trích mark/modifier region-based
-- [ ] `compose` + `build`: dựng lại 76 glyph thiếu của Departure Mono
-- **Acceptance**: font output đủ 134/134; coverage khớp bản tay làm
+### Phase 1 — Deterministic core (chưa AI) ✅
+- [x] `analyze`: coverage diff + inventory + grid detect
+- [x] `marks`: mark pack cho mark/modifier mà font thiếu
+- [x] `compose` + `build`: dựng 76 glyph thiếu, **giữ nguyên contour gốc của base**
+- **Kết quả**: coverage **134/134**; **134/134** glyph giữ nguyên contour carrier.
+  Bản dựng tay chỉ đạt **70/134** (64 glyph bị flatten base).
+  Lưới tự suy được từ font: 7×14 ô, pitch 50, đỉnh 550.
+- **Phát hiện mới**: 10 glyph HOA 2-mark có dấu **đè lên chữ nền** — xem mục "Ca khó" ở §4.
 
 ### Phase 2 — Jev judge
 - [ ] `judge.py`: client + question builders + batching

@@ -40,3 +40,27 @@ fontforge -script legacy/preview.py a ă â ế ơ ư
 
 `legacy/` là **bản tham chiếu**, không phải code của tool. `vietfont` tái tạo kết quả này
 bằng pipeline có Jev verify — xem `docs/plans/active/vietfont-v1.md`.
+
+## Dùng tool
+
+```bash
+vietfont analyze font-src/DepartureMono-Regular.otf
+vietfont add font-src/DepartureMono-Regular.otf -o build/DepartureMono-Viet-tool.otf --marks marks.json
+```
+
+`marks.json` chứa shape của mark/modifier mà font gốc không có: dấu hỏi (`hook_above`)
+và horn trên `o`/`O`. Giá trị trong đó lấy từ thiết kế tay trong `legacy/build_easy.py`.
+
+## ⚠️ Bản dựng tay bị hỏng shape
+
+`build/DepartureMono-Viet.otf` **không dùng được làm chuẩn đúng**: cả 76 glyph do pipeline
+tay tạo ra đã bị **flatten base letter** — `rects_of()` lấy bounding box của contour rồi vẽ
+lại thành hình chữ nhật, phá shape của mọi chữ có contour không phải hình chữ nhật.
+`ả` trong bản này là một khối đặc, không phải chữ `a` có móc.
+
+| | giữ nguyên contour carrier |
+|---|---|
+| bản tay làm | 70/134 |
+| `vietfont` | **134/134** |
+
+Chi tiết + cách kiểm: `docs/research/ground-truth-flattening.md`.
