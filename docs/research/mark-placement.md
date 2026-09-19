@@ -67,14 +67,17 @@ shift   = clamp(đáy_dấu − đáy_dấu_tự_nhiên, 0, headroom)
 
 ## Kết quả
 
+Số đo bằng `vietfont verify` (120 glyph có dấu):
+
 | | trước | sau |
 |---|---|---|
-| glyph có gap 1 | 118/134 | **130/134** |
-| glyph mất mực khi ghi vào font | — | **0** |
+| glyph có gap 1 | 76/120 | **88/120** |
+| mực khớp thiết kế | 99/120 | **120/120** |
 | base letter giữ contour | 134/134 | **134/134** |
 | coverage | 134/134 | **134/134** |
 
-Còn 4 glyph gap 0: `Ắ Ằ Ẳ Ẵ`. Chữ HOA chiếm hàng 3–10, phía trên chỉ còn 3 hàng, cần 4
-(dấu 2 + modifier 1 + gap 1). Hết chỗ thật, đã chấp nhận — xem plan §4.
+Còn 32 glyph gap 0, chia làm ba nhóm — cả ba đều đúng, không phải lỗi:
 
-`ì í ĩ ỉ` đều gap 0 — đúng convention của font cho chữ `i`, không phải lỗi.
+- **24 glyph horn** (`ơ ư ớ ờ ở ỡ ợ ứ ừ ử ữ ự` + HOA): horn dính liền chữ, đúng thiết kế.
+- **4 glyph `Ắ Ằ Ẳ Ẵ`**: chữ HOA chiếm hàng 3–10, phía trên còn 3 hàng, cần 4. Hết chỗ thật.
+- **4 glyph `ì í ĩ ỉ`**: đúng convention của font cho chữ `i` (dấu ngang hàng dấu chấm).

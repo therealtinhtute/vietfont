@@ -134,12 +134,14 @@ Kết quả: **0 cặp contour chồng nhau**, base letter vẫn giữ nguyên c
 
 **Đã sửa thêm (Phase 2.5)**: dấu dính sát chữ nền. Convention thật của font là **dải cố
 định** — chữ thường dấu ở hàng 2–3, chữ hoa hàng 0–1 — tức `đáy_dấu = x-height/cap-height
-+ 1 hàng`. Sau khi sửa: **130/134 glyph có gap 1** (trước 118), 0 glyph mất mực.
++ 1 hàng`. Sau khi sửa: **88/120 glyph có gap 1** (trước 76), mực khớp thiết kế 120/120.
 Chi tiết + bẫy chữ `i`: `docs/research/mark-placement.md`.
 
-Còn đúng 4 glyph gap 0: `Ắ Ằ Ẳ Ẵ` — chữ HOA chiếm hàng 3–10, phía trên còn 3 hàng, cần 4.
-Hết chỗ thật; hai phương án còn lại (dấu nén 1 hàng → acute/grave trùng pixel; tăng ascent
-→ đổi line height toàn font) đều đắt hơn lợi.
+32 glyph còn gap 0 đều đúng: 24 horn (dính liền chữ), 4 `Ắ Ằ Ẳ Ẵ` (hết chỗ trong lưới),
+4 `ì í ĩ ỉ` (convention của font cho chữ `i`).
+
+**Kiểm chứng**: `vietfont verify <font> --source <gốc> --marks <pack>` — kiểm coverage,
+giữ contour chữ nền, mực khớp thiết kế, va chạm; exit code khác 0 khi fail.
 
 ## 5. Phases
 

@@ -57,6 +57,18 @@ VIRTUAL_ENV=.venv uv pip install -e .
 .venv/bin/vietfont --version
 ```
 
+Bốn lệnh:
+
+```bash
+vietfont analyze <font>                          # đo độ phủ tiếng Việt
+vietfont add <font> -o <out> --marks <pack>      # dựng ký tự còn thiếu
+vietfont verify <out> --source <font> --marks <pack>   # kiểm: coverage, shape, mực
+vietfont proof <out> -o proof.html --layout columns    # proof sheet để duyệt bằng mắt
+```
+
+`verify` là cổng: exit code khác 0 khi font thiếu ký tự, bị flatten chữ nền, lệch mực,
+hoặc có dấu đè chữ nền.
+
 `fontforge` là module hệ thống (không cài qua pip) — venv phải tạo bằng
 `--system-site-packages` từ python homebrew.
 
