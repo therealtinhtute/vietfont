@@ -40,7 +40,7 @@ class Grid:
         return (x0 + x1) / 2, (y0 + y1) / 2
 
     @classmethod
-    def detect(cls, font) -> "Grid":
+    def detect(cls, font) -> Grid:
         """Suy ra lưới từ chính font: pitch = gcd mọi toạ độ, biên từ typo metrics."""
         top = int(font.os2_typoascent)
         bottom = int(font.os2_typodescent)

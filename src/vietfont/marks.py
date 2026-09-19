@@ -27,7 +27,7 @@ class MarkPack:
     compact_modifiers: dict[str, list[Contour]] = field(default_factory=dict)
 
     @classmethod
-    def load(cls, path: str | Path) -> "MarkPack":
+    def load(cls, path: str | Path) -> MarkPack:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls(
             marks={name: _to_contours(cs) for name, cs in raw.get("marks", {}).items()},
@@ -36,7 +36,8 @@ class MarkPack:
                 for mod, bases in raw.get("modifiers", {}).items()
             },
             compact_modifiers={
-                mod: _to_contours(cs) for mod, cs in raw.get("compact_modifiers", {}).items()
+                mod: _to_contours(cs)
+                for mod, cs in raw.get("compact_modifiers", {}).items()
             },
         )
 

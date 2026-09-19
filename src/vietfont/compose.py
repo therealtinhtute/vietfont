@@ -13,10 +13,12 @@ from vietfont import charset as cs
 from vietfont.glyph import (
     Contour,
     bounds,
-    contours as read_contours,
     ensure_winding,
     is_clockwise,
     translate,
+)
+from vietfont.glyph import (
+    contours as read_contours,
 )
 from vietfont.grid import Grid
 from vietfont.marks import MarkPack
@@ -39,7 +41,9 @@ class Composition:
     #: Dịch dọc đã áp cho tone mark.
     shift: float
     #: Các cặp contour của carrier và mark chồng lên nhau (lỗi thiết kế cần xử lý).
-    collisions: list[tuple[tuple[float, ...], tuple[float, ...]]] = field(default_factory=list)
+    collisions: list[tuple[tuple[float, ...], tuple[float, ...]]] = field(
+        default_factory=list
+    )
 
 
 def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
@@ -81,7 +85,9 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
     )
 
 
-def _compact_carrier(font, base: str, modifier: str, pack: MarkPack) -> list[Contour] | None:
+def _compact_carrier(
+    font, base: str, modifier: str, pack: MarkPack
+) -> list[Contour] | None:
     """Dựng lại carrier với modifier thu gọn 1 hàng, đặt ngay trên mực chữ nền."""
     compact = pack.compact_modifier(modifier)
     if compact is None:
@@ -94,7 +100,9 @@ def _compact_carrier(font, base: str, modifier: str, pack: MarkPack) -> list[Con
     return base_contours + translate(compact, 0, base_box[3] - modifier_box[1])
 
 
-def _carrier(font, base: str, modifier: str, pack: MarkPack) -> tuple[list[Contour], str]:
+def _carrier(
+    font, base: str, modifier: str, pack: MarkPack
+) -> tuple[list[Contour], str]:
     if modifier == "none":
         return _glyph_contours(font, base), "font"
 
@@ -120,7 +128,9 @@ def _tone(font, tone: str, pack: MarkPack) -> tuple[list[Contour], str]:
 
     mark = pack.mark(tone)
     if mark is None:
-        raise ComposeError(f"thiếu mark {tone!r}: font không có U+{ord(combining):04X} và pack không khai báo")
+        raise ComposeError(
+            f"thiếu mark {tone!r}: font không có U+{ord(combining):04X} và pack không khai báo"
+        )
     return mark, "pack"
 
 
@@ -179,7 +189,9 @@ def _dedupe(mark: list[Contour], carrier: list[Contour]) -> list[Contour]:
     return [points for points in mark if frozenset(points) not in existing]
 
 
-def _collisions(carrier: list[Contour], mark: list[Contour]) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
+def _collisions(
+    carrier: list[Contour], mark: list[Contour]
+) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
     """Các cặp contour chồng nhau — dấu hiệu mark đè lên chữ nền."""
     out = []
     for a in carrier:
@@ -188,6 +200,11 @@ def _collisions(carrier: list[Contour], mark: list[Contour]) -> list[tuple[tuple
             box_b = bounds([b])
             if box_a is None or box_b is None:
                 continue
-            if box_a[0] < box_b[2] and box_b[0] < box_a[2] and box_a[1] < box_b[3] and box_b[1] < box_a[3]:
+            if (
+                box_a[0] < box_b[2]
+                and box_b[0] < box_a[2]
+                and box_a[1] < box_b[3]
+                and box_b[1] < box_a[3]
+            ):
                 out.append((box_a, box_b))
     return out

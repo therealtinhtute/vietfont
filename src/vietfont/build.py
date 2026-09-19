@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from vietfont import charset as cs
 from vietfont.analyze import analyze
 from vietfont.compose import ComposeError, compose
 from vietfont.glyph import Contour, set_contours
