@@ -25,10 +25,17 @@ analyze → extract → plan → compose → render → JEV judge → apply → 
 ## Trạng thái
 
 Plan đã lock: [`docs/plans/active/vietfont-v1.md`](docs/plans/active/vietfont-v1.md).
-Phase 0 (migrate + scaffold) và Phase 1 (deterministic core) xong. Phase 2 (Jev judge) là bước kế tiếp.
+Phase 0, 1 xong. Phase 2 xong với **kết quả âm tính**. Phase 3 cần thiết kế lại.
 
-Phase 1 đạt **134/134 ký tự** và **134/134 glyph giữ nguyên shape chữ nền** — bản dựng tay
+**Phase 1** đạt **134/134 ký tự** và **134/134 glyph giữ nguyên shape chữ nền** — bản dựng tay
 chỉ đạt 70/134 vì pipeline cũ flatten base letter (xem `docs/research/ground-truth-flattening.md`).
+
+**Phase 2** đo được: Jev đọc glyph pixel chỉ đạt **62%** trên toàn bộ glyph có thanh điệu
+(80% trên mẫu lowercase nhỏ). Không đủ để làm cổng verify. Đã thử 10 cách hỏi khác nhau —
+số liệu đầy đủ ở `docs/research/jev-verification-limits.md`.
+
+→ Cổng verify là **kiểm tra tất định** (coverage, giữ contour, phát hiện va chạm).
+Jev chỉ còn là tín hiệu tham khảo. Người duyệt qua proof sheet là chốt cuối.
 
 Bối cảnh: [departure-mono#21](https://github.com/rektdeckard/departure-mono/issues/21) —
 feature request Việt hoá còn mở; bản dựng tay trong repo này đã chứng minh grid 7×14 đủ chỗ.

@@ -84,6 +84,11 @@ font.otf
 
 ## 4. Thiết kế câu hỏi
 
+> **Cập nhật sau Phase 2**: thiết kế 3 câu dưới đây **không dùng được** — đo trên font thật
+> chỉ đạt 18% all-three. Jev không đọc nổi glyph pixel. Thiết kế thay thế (crop vùng mark)
+> đạt 62% trên toàn bộ glyph có thanh điệu, và chỉ dùng làm tín hiệu tham khảo.
+> Xem `docs/research/jev-verification-limits.md`. Phần dưới giữ lại làm hồ sơ thiết kế.
+
 **Verify — 3 câu độc lập mỗi glyph** (đo trên 24 glyph khó: 24/24 · 21/24 · 23/24):
 
 | id | type | hỏi | vocabulary trong state |
@@ -139,15 +144,21 @@ phải lỗi code. Phase 2/3 phải giải: vẽ mark nhỏ hơn, hạ modifier 
   Lưới tự suy được từ font: 7×14 ô, pitch 50, đỉnh 550.
 - **Phát hiện mới**: 10 glyph HOA 2-mark có dấu **đè lên chữ nền** — xem mục "Ca khó" ở §4.
 
-### Phase 2 — Jev judge
-- [ ] `judge.py`: client + question builders + batching
-- [ ] verify pass trên ground truth → đo agreement với bản tay làm
-- [ ] calibrate ngưỡng confidence
-- **Acceptance**: verify trên font tay làm đạt ≥ 90% all-three; miss có conf thấp hơn hit (tách được)
+### Phase 2 — Jev judge ⚠️ kết quả âm tính
+- [x] `judge.py`: client + question builders + batching
+- [x] đo accuracy trên 120 glyph có thanh điệu của font tool dựng
+- **Kết quả**: accuracy tốt nhất **62%** trên toàn bộ, 80% trên mẫu 60 glyph lowercase.
+  Acceptance ≥ 90% **KHÔNG đạt**. Jev không đọc được glyph pixel đủ tin cậy để làm cổng verify.
+- **Hệ quả**: cổng verify là **kiểm tra tất định** (coverage, giữ contour, phát hiện va chạm);
+  Jev chỉ còn là tín hiệu tham khảo để xếp hạng glyph cho người xem.
+  Số liệu đầy đủ 10 cách hỏi đã thử: `docs/research/jev-verification-limits.md`
 
-### Phase 3 — Candidate selection loop
-- [ ] sinh N candidate/glyph; Jev select + verify; fail → escalate
-- **Acceptance**: tool tự ra font đạt verify rate ≥ bản tay làm
+### Phase 3 — Candidate selection loop ⚠️ cần thiết kế lại
+- [ ] sinh N candidate/glyph
+- [ ] chọn candidate — **không thể dùng Jev**: Phase 2 cho thấy Jev không đọc nổi glyph,
+      nên nó cũng không so được candidate nào tốt hơn
+- **Hướng thay thế**: chấm điểm bằng code (khoảng cách tới mark chuẩn, va chạm, cân đối
+  ngang), hoặc để Jev phán trên *mô tả* thay vì trên lưới pixel — cả hai đều chưa test
 
 ### Phase 4 — Proof sheet + review
 - [ ] HTML proof sheet: 134 ký tự, conf, flag
@@ -166,7 +177,8 @@ phải lỗi code. Phase 2/3 phải giải: vẽ mark nhỏ hơn, hạ modifier 
 | font thiếu Latin-1 precomposed → không có mark để trích | v1 báo lỗi rõ + dừng; thiết kế mark để v2 |
 | outline font | ngoài scope v1 |
 | grid detection sai | cho override bằng CLI flag |
-| Jev đọc sai ở resolution thấp | confidence routing + proof sheet |
+| **Jev không đọc nổi glyph pixel** (đã xảy ra — 62%) | cổng verify chuyển sang kiểm tra tất định; Jev chỉ tham khảo; người duyệt qua proof sheet |
+| nhóm HOA 2-mark không đủ chỗ trong lưới | đã phát hiện + báo cáo; cần giải pháp thiết kế ở Phase 3 |
 
 ## 7. Ngoài scope v1
 
