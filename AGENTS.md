@@ -73,7 +73,7 @@ single worst bug in this repo's history: it flattened 76 glyphs into solid recta
 
 | Path | Purpose |
 |---|---|
-| `src/vietfont/` | The tool. 13 modules, no subpackages. |
+| `src/vietfont/` | The tool. 14 modules, no subpackages. |
 | `fonts/departure-mono-viet/` | The font project: sources, mark pack, builds, legacy pipeline. |
 | `fonts/departure-mono-viet/font-src/` | Upstream font, unmodified (byte-identical to upstream v1.500). |
 | `fonts/departure-mono-viet/build/` | Font artifacts. `DepartureMonoViet-Regular.otf` is the release. |

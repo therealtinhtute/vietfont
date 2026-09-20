@@ -160,20 +160,27 @@ def _collisions(
     return out
 
 
+#: Script mà ligature lập trình phải chạy được. Kiểm riêng từng cái, không gộp.
+REQUIRED_SCRIPTS = ("DFLT", "latn")
+
+
 def _liga_substitutions(path) -> tuple[dict[tuple[str, ...], str], set[str]]:
     """Dãy glyph nguồn -> glyph ligature, cùng các script KHÔNG bật ``liga``.
 
-    Phải kiểm theo từng script: ``mergeFeature`` có thể đăng ký ``liga`` dưới
-    ``DFLT`` mà quên ``latn``. Khi đó ``hb-shape --script=latn`` không thay thế, và
-    trình duyệt dùng ``latn`` cho ``==`` nên ligature không bao giờ chạy — dù lookup
-    vẫn nằm nguyên trong bảng GSUB.
+    Kiểm theo **default LangSys của từng script được yêu cầu**, không gộp chung:
+    ``mergeFeature`` có thể đăng ký ``liga`` dưới ``DFLT`` mà quên ``latn``, hoặc chỉ
+    bật nó cho một LangSys phụ như ``latn/TRK``. Gộp ``DefaultLangSys`` với mọi
+    ``LangSysRecord`` sẽ che mất cả hai ca đó — trong khi văn bản Latin thường vẫn
+    không ligate.
+
+    ``hb-shape --script=latn`` là phép thử bắt được lỗi này.
     """
     from fontTools.ttLib import TTFont
 
     font = TTFont(str(path))
     gsub = font.get("GSUB")
     if gsub is None:
-        return {}, set()
+        return {}, set(REQUIRED_SCRIPTS)
     table = gsub.table
     liga = {
         i
@@ -181,17 +188,17 @@ def _liga_substitutions(path) -> tuple[dict[tuple[str, ...], str], set[str]]:
         if record.FeatureTag == "liga"
     }
 
+    by_tag = {script.ScriptTag: script.Script for script in table.ScriptList.ScriptRecord}
+    missing: set[str] = set()
     per_script: dict[str, set[int]] = {}
-    for script in table.ScriptList.ScriptRecord:
-        systems = [script.Script.DefaultLangSys]
-        systems += [record.LangSys for record in script.Script.LangSysRecord]
-        enabled: set[int] = set()
-        for system in systems:
-            if system is not None:
-                enabled.update(i for i in system.FeatureIndex if i in liga)
-        per_script[script.ScriptTag] = enabled
+    for tag in REQUIRED_SCRIPTS:
+        script = by_tag.get(tag)
+        default = script.DefaultLangSys if script is not None else None
+        enabled = {i for i in default.FeatureIndex if i in liga} if default else set()
+        per_script[tag] = enabled
+        if not enabled:
+            missing.add(tag)
 
-    missing = {tag for tag, indices in per_script.items() if not indices}
     common = set.intersection(*per_script.values()) if per_script else set()
 
     lookups: set[int] = set()

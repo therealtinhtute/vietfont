@@ -73,14 +73,40 @@ mà mọi phép kiểm "có lookup trong bảng" đều báo đạt.
 
 **Sửa**: khai cả hai `languagesystem`. Sau đó `hb-shape --script=latn` ra `[equal_equal=0+700]`.
 
+## Snap thôi là chưa đủ — contour teo thành điểm
+
+Làm tròn mọi đỉnh về bội số 50 **không** bảo toàn hình. Hai đỉnh kề nhau có thể rơi vào
+cùng một ô, để lại contour **diện tích 0** — fontforge vẽ ra hư không, mà ảnh raster lại
+che mất vì ô đó vẫn có mực từ contour khác.
+
+Đo trên chính 26 glyph này: **9 contour teo trên 2 glyph**. Nếu chỉ snap mà không dọn,
+font ra vẫn "trông đúng" trong proof sheet nhưng mang contour rác.
+
+Nên `snap()` làm ba việc, không phải một:
+
+1. kéo mọi đỉnh về bội số của `pitch`;
+2. gộp đỉnh trùng **kề nhau** (và đỉnh cuối trùng đỉnh đầu của contour khép kín);
+3. bỏ contour còn dưới 3 đỉnh — báo lại số lượng trong `LigatureReport.dropped`.
+
 ## Cổng verify phải kiểm cả ba tầng
 
 `_ligatures()` trong `verify.py` kiểm theo thứ tự:
 
 1. **GSUB thay thế đúng** — dãy glyph nguồn phải trỏ tới đúng glyph đích, và feature phải
-   được bật cho **mọi** script mà font khai. Chỉ kiểm "lookup có trong bảng" là bỏ lọt bẫy `latn`.
+   được bật cho **default LangSys của từng script bắt buộc** (`DFLT`, `latn`).
 2. **Trên lưới** — mọi điểm là bội số của `pitch`.
 3. **Đúng nhịp** — `advance == pitch × cols × số ký tự`.
+
+Tầng 1 có hai ca false-pass đã gặp thật, cả hai đều đã dựng font để thử:
+
+| ca | `hb-shape` mặc định | `hb-shape --script=latn` | cổng cũ | cổng mới |
+|---|---|---|---|---|
+| `liga` chỉ đăng ký dưới `DFLT` | có ligature | **không** | ĐẠT (sai) | KHÔNG ĐẠT |
+| `liga` chỉ bật cho `latn/TRK`, không bật `latn` default | có ligature | **không** | ĐẠT (sai) | KHÔNG ĐẠT |
+
+Cả hai đều qua được phép kiểm "lookup có nằm trong bảng GSUB". Phải đọc **`DefaultLangSys`
+của từng script riêng biệt** — gộp `DefaultLangSys` với mọi `LangSysRecord` là bỏ lọt ca
+thứ hai.
 
 Bản cộng đồng fail tầng 2 và 3; bản `mergeFeature` thiếu `latn` fail tầng 1.
 

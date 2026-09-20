@@ -157,14 +157,22 @@ def _run_add(args: argparse.Namespace) -> int:
     if args.family:
         print(f"family   : {args.family}")
     if ligatures is not None:
-        print(f"ligature : {len(ligatures.added)} glyph, feature liga đã gắn")
+        if ligatures.added:
+            print(f"ligature : {len(ligatures.added)} glyph, feature liga đã gắn")
+        else:
+            print("ligature : không ghép được glyph nào, feature liga KHÔNG gắn")
         if ligatures.snapped:
             total = sum(ligatures.snapped.values())
             print(f"           snap lưới: {total} điểm trên {len(ligatures.snapped)} glyph")
+        if ligatures.dropped:
+            total = sum(ligatures.dropped.values())
+            print(f"           bỏ contour teo: {total} trên {len(ligatures.dropped)} glyph")
         if ligatures.advances:
             print(f"           sửa advance: {len(ligatures.advances)} glyph")
         if ligatures.missing:
             print(f"           thiếu trong font nguồn: {', '.join(ligatures.missing)}")
+        if ligatures.empty:
+            print(f"           rỗng sau snap: {', '.join(ligatures.empty)}")
     if report.collisions:
         print(f"va chạm  : {len(report.collisions)} glyph có dấu đè lên chữ nền")
         for char, count in sorted(report.collisions.items()):
