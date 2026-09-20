@@ -30,7 +30,36 @@ lưới 10 đơn vị/pixel:
 ```
 
 Đặc điểm: **vòng móc ở trên-trái, nét chạy xuống bên phải, đuôi khoáy về trái ở dưới**.
-Đây là dáng "?" thu nhỏ. Bản 4 hàng của ta giữ đúng cấu trúc đó.
+
+## Bản 4 hàng đầu tiên sai — quá đậm
+
+Bản đầu bám sát Fixedsys, nhưng Fixedsys vẽ nét **2 pixel rộng**, còn các dấu của
+Departure Mono đều **1 pixel**:
+
+```
+sắc   ....#..      hỏi (bản sai)   ..##...
+      ...#...                      .#.##..   ← hai nét dọc song song
+                                   ...##..
+                                   ..##...
+```
+
+Nhìn ra ngay là lạc lõng: dấu hỏi thành một khối, các dấu khác là nét mảnh. Người dùng
+bắt đúng chỗ này — *"không nên có 2 dọc 1 lần, chỉ là đường nét đơn như các dấu khác"*.
+
+## Dáng cuối — nét đơn
+
+```
+ả  (4 hàng)        Ả  (4 hàng)
+   ...#...            ...#...
+   ...#...            ...#...
+   ..#....            ..#....
+   .#.....            .#.....
+```
+
+Một nét duy nhất: **xuống 2 hàng rồi khoáy sang trái**. Giữ được đặc trưng của dấu hỏi
+(có đoạn xuống rồi mới móc) mà vẫn mảnh như `á à ã`.
+
+Bản thu gọn 3 hàng bỏ hàng đuôi cuối, dùng khi chữ hoa 2 dấu hết chỗ.
 
 ## Chỗ lưới hết chỗ — và cách nới
 
