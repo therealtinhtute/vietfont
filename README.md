@@ -237,10 +237,10 @@ Repo này có **hai** giấy phép, theo đúng nguồn gốc của từng phầ
 
 | phần | giấy phép | file |
 |---|---|---|
-| **Font** — `fonts/` (font gốc, mark pack, mọi bản dựng) | **SIL OFL 1.1** | [`LICENSE`](LICENSE) |
-| **Code** — `src/`, `scripts/` | MIT | [`LICENSE-MIT`](LICENSE-MIT) |
+| **Font Software** — font binaries + font design data: `fonts/*/font-src/`, `fonts/*/research/`, `fonts/*/build/`, `fonts/*/marks.json` | **SIL OFL 1.1** | [`LICENSE`](LICENSE) · [`fonts/departure-mono-viet/OFL.txt`](fonts/departure-mono-viet/OFL.txt) |
+| **Phần còn lại** — tool (`src/`, `scripts/`, `legacy/`), tài liệu (`docs/`, README), demo page | MIT | [`LICENSE-MIT`](LICENSE-MIT) |
 
-Ghi chú phái sinh (font gốc, phần đã sửa, phạm vi từng giấy phép): [`NOTICE`](NOTICE).
+Ghi chú phái sinh — font gốc, phần đã sửa, phạm vi từng giấy phép: [`NOTICE`](NOTICE).
 
 Font gốc là **SIL OFL 1.1** (© 2022–2024 Helena Zhang) — *không phải MIT*. Bản phái sinh giữ
 nguyên thông báo bản quyền và giấy phép trong name table (nameID 0, 13, 14). OFL 1.1 không
