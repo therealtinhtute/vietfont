@@ -115,12 +115,20 @@ Số liệu đầy đủ 10 cách hỏi đã thử:
 ## Pipeline
 
 ```
-analyze → extract → plan → compose → render → JEV judge → apply → build → proof
+analyze → extract → plan → compose → build → verify → proof
+                                              │         │
+                                              │         └─ người duyệt (chốt cuối)
+                                              └─ cổng tất định (chặn được)
+
+judge — nhánh phụ tùy chọn: xếp hạng glyph, không chặn
 ```
 
-- **Code** sở hữu toàn bộ control flow: coverage diff, trích mark, dựng candidate, ghi font.
-- **Jev** chỉ làm phán đoán thị giác: chọn candidate, verify từng glyph, phát hiện va chạm.
-- **Người** duyệt ca confidence thấp qua proof sheet.
+- **Code** sở hữu toàn bộ control flow: coverage diff, trích mark, dựng candidate, ghi font,
+  và **mọi phép kiểm** — coverage, giữ contour, mực, va chạm.
+- **`judge`** là nhánh phụ tùy chọn, **không nằm trên đường đi của bản dựng**: Jev đọc tone
+  mark để xếp hạng glyph cho người xem trước. Không chặn, không chọn candidate — xem mục
+  [Jev dùng để làm gì](#jev-dùng-để-làm-gì).
+- **Người** duyệt proof sheet. Đây là bước verify thật sự, không phải "duyệt ca khó".
 
 ## Cấu trúc
 

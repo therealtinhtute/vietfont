@@ -39,7 +39,7 @@ fontforge -script legacy/preview.py a ă â ế ơ ư
 ```
 
 `legacy/` là **bản tham chiếu**, không phải code của tool. `vietfont` tái tạo kết quả này
-bằng pipeline có Jev verify — xem `docs/plans/active/vietfont-v1.md`.
+bằng pipeline tất định, cổng verify riêng — xem `docs/plans/active/vietfont-v1.md`.
 
 ## Dùng tool
 
