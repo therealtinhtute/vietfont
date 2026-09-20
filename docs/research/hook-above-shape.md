@@ -1,0 +1,76 @@
+# Dấu hỏi: dáng móc, và chỗ lưới hết chỗ
+
+Ngày: 2026-09-20 · Trạng thái: đã sửa
+
+## Vấn đề
+
+Người dùng báo dấu hỏi "giống cái móc câu hơn" là dấu hỏi. Model thị giác mô tả dáng cũ
+là *"a tick resting on a horizontal bar"* — một pixel ở góc phải, rồi thanh ngang bên
+dưới-trái. Hai mảng chỉ **dính chéo** nhau nên mắt tách rời, không ra một nét.
+
+```
+cũ:  ....#..      mới:  ..##...
+     ..##...            .#.##..
+                        ...##..
+                        ..##...
+```
+
+## Dáng đúng
+
+Tham chiếu là **Fixedsys Excelsior** — font pixel đã Việt hoá, chính là font trong ảnh
+của issue gốc. Outline lấy từ `FSEX.ttx` (repo `kika/fixedsys`), `unitsPerEm=160`,
+lưới 10 đơn vị/pixel:
+
+```
+ả  (Fixedsys, 4 hàng)
+   ...##...
+   ..#.##..
+   ....##..
+   ...##...
+```
+
+Đặc điểm: **vòng móc ở trên-trái, nét chạy xuống bên phải, đuôi khoáy về trái ở dưới**.
+Đây là dáng "?" thu nhỏ. Bản 4 hàng của ta giữ đúng cấu trúc đó.
+
+## Chỗ lưới hết chỗ
+
+| | dải dấu | hàng trống phía trên | dáng dùng được |
+|---|---|---|---|
+| chữ thường | 2–3 | 0–1 | **4 hàng** |
+| chữ hoa | 0–1 | không còn | **2 hàng** |
+
+Chữ hoa chỉ có 3 hàng trên cap-height, mà glyph 2 dấu cần dấu thanh + modifier. Nên
+mark đầy đủ không vừa — `_tone_shift` kẹp lại và dấu đè lên nhau.
+
+Sửa: thêm `compact_marks` vào mark pack, đối xứng với `compact_modifiers` đã có.
+`compose` chọn bản thu gọn khi `_fits()` báo mark đầy đủ không nằm được trên vật cản
+mà không vượt đỉnh lưới.
+
+```json
+"marks":         { "hook_above": [ ... 4 hàng ... ] },
+"compact_marks": { "hook_above": [ ... 2 hàng ... ] }
+```
+
+## Chữ `i` — mark nuốt dấu chấm
+
+Đuôi móc 4 hàng rộng 2 ô, mà dấu chấm của `i` nằm đúng một trong hai ô đó. Để cả hai
+thì fontforge coi là contour lồng nhau, lật chiều, mất mực.
+
+`_dedupe` giờ làm hai việc: bỏ contour của mark trùng khít với carrier, **và** bỏ
+contour của carrier nằm trọn trong một contour của mark. Mark hấp thụ dấu chấm thay vì
+chồng lên nó — đúng convention của font gốc, nơi dấu và dấu chấm vốn là một.
+
+Hệ quả: `_flattened` phải chấp nhận contour chữ nền **được mark phủ trọn**, không chỉ
+contour còn nguyên. Nếu không nó báo nhầm `ỉ` là flatten. Phép kiểm vẫn bắt được font
+cũ (mất mực thật), nên không bị yếu đi.
+
+## Kết quả
+
+```
+coverage : 134/134
+shape    : 134/134 glyph giữ contour chữ nền
+trùng hình: không có
+mực      : khớp thiết kế
+va chạm  : không có
+ĐẠT
+```
