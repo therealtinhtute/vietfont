@@ -69,15 +69,25 @@ def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
 
 
 def _flattened(font, source, present: list[str]) -> list[str]:
-    """Glyph không còn giữ contour của chữ nền."""
+    """Glyph không còn giữ mực của chữ nền.
+
+    Contour của chữ nền phải còn nguyên, hoặc được mark phủ trọn. Chữ ``i`` rơi vào
+    trường hợp sau: dấu chấm nằm đúng dải của mark nên mark nuốt nó — mực vẫn còn,
+    chỉ là contour đã gộp. Kiểm bằng contour đơn thuần sẽ báo nhầm là flatten.
+    """
+    grid = Grid.detect(source)
     out = []
     for char in present:
         base = cs.decompose(char)[0]
         if ord(base) not in source:
             continue
         have = read_contours(font[ord(char)])
-        if not all(c in have for c in read_contours(source[ord(base)])):
+        have_cells = cells(have, grid)
+        for contour in read_contours(source[ord(base)]):
+            if contour in have or cells([contour], grid) <= have_cells:
+                continue
             out.append(char)
+            break
     return out
 
 
