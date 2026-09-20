@@ -60,10 +60,20 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
 
     # Với glyph 1 dấu, vật cản là x-height/cap-height của chữ nền; với glyph 2 dấu,
     # vật cản là chính modifier nên dùng đỉnh mực của carrier.
-    obstacle = _letter_top(font, base) if modifier == "none" else None
+    obstacle = _letter_top(font, base) if modifier == "none" else _ink_top(carrier)
+
+    # Chữ HOA chỉ còn 2 hàng phía trên cap-height. Mark đầy đủ (dấu hỏi 4 hàng) không
+    # vừa thì dùng bản thu gọn, thay vì để `_tone_shift` kẹp lại rồi dấu đè lên nhau.
+    if mark and obstacle is not None and not _fits(mark, obstacle, grid):
+        compact_mark = pack.compact_mark(tone)
+        if compact_mark is not None:
+            mark = ensure_winding(compact_mark, clockwise=is_clockwise(carrier))
+            tone_source = f"{tone_source}+compact"
 
     shift = _tone_shift(carrier, mark, tone, grid, obstacle) if mark else 0.0
-    shifted = _dedupe(translate(mark, 0, shift), carrier) if mark else []
+    shifted, carrier = (
+        _dedupe(translate(mark, 0, shift), carrier) if mark else ([], carrier)
+    )
 
     # Hết chỗ: chữ HOA chiếm row 3-10, modifier row 0-1, chỉ còn 1 row trống mà
     # tone mark cần 2. Thu gọn modifier xuống 1 row để nhường chỗ cho tone.
@@ -72,8 +82,8 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
         if compact is not None:
             carrier = ensure_winding(compact, clockwise=is_clockwise(carrier))
             carrier_source = f"{carrier_source}+compact"
-            shift = _tone_shift(carrier, mark, tone, grid, obstacle)
-            shifted = _dedupe(translate(mark, 0, shift), carrier)
+            shift = _tone_shift(carrier, mark, tone, grid, _ink_top(carrier))
+            shifted, carrier = _dedupe(translate(mark, 0, shift), carrier)
 
     return Composition(
         char=char,
@@ -141,6 +151,22 @@ def _glyph_contours(font, char: str) -> list[Contour]:
     return read_contours(font[ord(char)])
 
 
+def _ink_top(contours: list[Contour]) -> float | None:
+    """Đỉnh mực của một nhóm contour."""
+    box = bounds(contours)
+    return box[3] if box is not None else None
+
+
+def _fits(mark: list[Contour], obstacle_top: float, grid: Grid) -> bool:
+    """Mark có đủ chỗ nằm trên vật cản, chừa 1 hàng lưới, mà không vượt đỉnh lưới."""
+    box = bounds(mark)
+    if box is None:
+        return True
+    need = obstacle_top + grid.pitch - box[1]
+    room = grid.top - box[3]
+    return need <= room
+
+
 def _tone_shift(
     carrier: list[Contour],
     mark: list[Contour],
@@ -179,15 +205,33 @@ def _letter_top(font, base: str) -> float | None:
     return float(value) if value else None
 
 
-def _dedupe(mark: list[Contour], carrier: list[Contour]) -> list[Contour]:
-    """Bỏ contour của mark trùng khít với contour đã có trong carrier.
+def _dedupe(
+    mark: list[Contour], carrier: list[Contour]
+) -> tuple[list[Contour], list[Contour]]:
+    """Gộp mark vào carrier: bỏ contour trùng khít, và bỏ contour carrier nằm lọt trong mark.
 
-    Chữ ``i`` có dấu chấm nằm đúng chỗ pixel dưới cùng của dấu. Font gốc gộp hai
-    thứ làm một; nếu ta thêm contour thứ hai trùng khít thì fontforge coi đó là
-    contour lồng nhau, lật chiều, và mất mực.
+    Chữ ``i`` có dấu chấm nằm đúng dải của mark. Font gốc gộp hai thứ làm một; nếu để
+    cả hai thì fontforge coi là contour lồng nhau, lật chiều, và mất mực. Nên mark
+    **nuốt** luôn dấu chấm: contour nào của carrier nằm trọn trong một contour của mark
+    thì bị bỏ, thay vì để chúng chồng nhau.
+
+    Trả về ``(mark, carrier)`` đã lọc.
     """
-    existing = {frozenset(points) for points in carrier}
-    return [points for points in mark if frozenset(points) not in existing]
+    carrier_keys = {frozenset(points) for points in carrier}
+    kept_mark = [p for p in mark if frozenset(p) not in carrier_keys]
+
+    mark_boxes = [b for b in (bounds([p]) for p in kept_mark) if b is not None]
+    kept_carrier = []
+    for contour in carrier:
+        box = bounds([contour])
+        inside = box is not None and any(
+            mb[0] <= box[0] and box[2] <= mb[2] and mb[1] <= box[1] and box[3] <= mb[3]
+            for mb in mark_boxes
+        )
+        if not inside:
+            kept_carrier.append(contour)
+
+    return kept_mark, kept_carrier
 
 
 def _shares_rows(carrier: list[Contour], mark: list[Contour], grid: Grid) -> bool:

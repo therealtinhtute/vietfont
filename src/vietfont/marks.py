@@ -21,6 +21,8 @@ from vietfont.glyph import Contour
 class MarkPack:
     #: Tên thanh điệu -> contour của mark.
     marks: dict[str, list[Contour]] = field(default_factory=dict)
+    #: Mark thu gọn, dùng khi lưới hết chỗ (chữ HOA).
+    compact_marks: dict[str, list[Contour]] = field(default_factory=dict)
     #: Tên modifier -> ký tự base -> contour của modifier.
     modifiers: dict[str, dict[str, list[Contour]]] = field(default_factory=dict)
     #: Modifier thu gọn 1 hàng, dùng khi lưới hết chỗ (chữ HOA 2-mark).
@@ -31,6 +33,10 @@ class MarkPack:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls(
             marks={name: _to_contours(cs) for name, cs in raw.get("marks", {}).items()},
+            compact_marks={
+                name: _to_contours(cs)
+                for name, cs in raw.get("compact_marks", {}).items()
+            },
             modifiers={
                 mod: {base: _to_contours(cs) for base, cs in bases.items()}
                 for mod, bases in raw.get("modifiers", {}).items()
@@ -44,6 +50,9 @@ class MarkPack:
     def save(self, path: str | Path) -> None:
         payload = {
             "marks": {name: _from_contours(cs) for name, cs in self.marks.items()},
+            "compact_marks": {
+                name: _from_contours(cs) for name, cs in self.compact_marks.items()
+            },
             "modifiers": {
                 mod: {base: _from_contours(cs) for base, cs in bases.items()}
                 for mod, bases in self.modifiers.items()
@@ -58,6 +67,9 @@ class MarkPack:
 
     def mark(self, tone: str) -> list[Contour] | None:
         return self.marks.get(tone)
+
+    def compact_mark(self, tone: str) -> list[Contour] | None:
+        return self.compact_marks.get(tone)
 
     def modifier(self, modifier: str, base: str) -> list[Contour] | None:
         return self.modifiers.get(modifier, {}).get(base)
