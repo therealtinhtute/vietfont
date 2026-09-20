@@ -46,23 +46,37 @@ sắc   ....#..      hỏi (bản sai)   ..##...
 Nhìn ra ngay là lạc lõng: dấu hỏi thành một khối, các dấu khác là nét mảnh. Người dùng
 bắt đúng chỗ này — *"không nên có 2 dọc 1 lần, chỉ là đường nét đơn như các dấu khác"*.
 
-## Dáng cuối — vòng xoáy nét mảnh
+## Dáng cuối — 3 hàng
 
 ```
-ả  (4 hàng)        Ả  (4 hàng)
-   ..##...            ..##...
-   .#..#..            .#..#..
+ả  (3 hàng)        Ả  (3 hàng)
+   ..###..            ..###..
    ....#..            ....#..
    ...#...            ...#...
 ```
 
-Thanh ngang trên, hai bên rủ xuống, rồi khoáy vào trong. Giữ đúng cấu trúc của
-Fixedsys (vòng móc trên-trái, nét xuống bên phải, đuôi khoáy vào) nhưng **mỗi đoạn
-1 pixel** — mảnh như `á à ã`.
+Thanh ngang 3 ô ở trên, rủ xuống bên phải, rồi khoáy vào trong về bên trái. Giữ đúng
+cấu trúc của Fixedsys (vòng móc trên-trái, nét xuống bên phải, đuôi khoáy vào) nhưng
+mỗi đoạn 1 pixel.
 
-Bản thu gọn 3 hàng bỏ hàng đuôi cuối, dùng khi chữ hoa 2 dấu hết chỗ.
+Thanh trên rộng 3 ô là chỗ cân lại phần đuôi bị mất so với bản 4 hàng — không có nó
+thì dấu trông như chữ "C" hơn là vòng xoáy.
 
-Chữ `i` chỉ được 3 hàng: hàng đuôi của móc trùng khít dấu chấm nên `_dedupe` gộp
+## Vì sao 3 hàng chứ không 4
+
+Bản 4 hàng (`..##...` / `.#..#..` / `....#..` / `...#...`) đẹp hơn khi soi ở cỡ lớn,
+nhưng đòi ascent 650 — chiều cao dòng +14% cho **cả font**.
+
+| móc | ascent | chiều cao dòng |
+|---|---|---|
+| 4 hàng | 650 | 800 (+14%) |
+| **3 hàng** | **600** | **750 (+7%)** |
+| 3 hàng | 550 | 700 (gốc) — **KHÔNG ĐẠT**, `Ẳ` bị dấu đè |
+
+Chữ hoa 2 dấu cần 4 hàng (3 hàng dấu + 1 hàng dấu mũ), nên không về được mức gốc 550.
+Nhưng 3 hàng cắt được một nửa cái giá so với 4 hàng, mà dấu vẫn đọc ra móc.
+
+Chữ `i` cũng được 3 hàng: hàng đuôi của móc trùng khít dấu chấm nên `_dedupe` gộp
 chúng làm một — đúng convention của font gốc.
 
 ## Chỗ lưới hết chỗ — và cách nới
@@ -79,26 +93,17 @@ Bản đầu sửa bằng `compact_marks`: mark pack có thêm bản thu gọn, 
 thu gọn khi `_fits()` báo bản đầy đủ không nằm được trên vật cản mà không vượt đỉnh lưới.
 
 ```json
-"marks":         { "hook_above": [ ... 4 hàng ... ] },
+"marks":         { "hook_above": [ ... 3 hàng ... ] },
 "compact_marks": { "hook_above": [ ... 3 hàng ... ] }
 ```
 
-Nhưng bản thu gọn vẫn chỉ 2 hàng, và người dùng muốn **mọi dấu hỏi từ 3 hàng trở lên**.
 Không còn cách nào khác ngoài **nâng ascent**: lưới cao thêm thì chữ hoa mới có chỗ.
 
-`--ascent 650` (gốc 550) cho lưới 16 hàng thay vì 14. Kết quả:
+`--ascent 600` (gốc 550) cho lưới 15 hàng thay vì 14.
 
-| ascent | chiều cao dòng | móc 3 hàng | móc 4 hàng |
-|---|---|---|---|
-| 550 (gốc) | 700 | — | 12 thường |
-| 600 | 750 (+7%) | 16 | 8 |
-| **650** | **800 (+14%)** | **10** | **14** |
-
-Chọn 650: nhiều glyph được móc đủ 4 hàng hơn, và khoảng cách dấu tốt hơn
-(91 glyph gap 1 so với 82).
-
-**Cái giá**: chiều cao dòng tăng 14% cho **cả font**, kể cả các glyph gốc. Đây là đánh
+**Cái giá**: chiều cao dòng tăng 7% cho **cả font**, kể cả các glyph gốc. Đây là đánh
 đổi thật, không phải chi tiết kỹ thuật — chữ sẽ giãn dòng hơn ở mọi nơi dùng font này.
+Bản 4 hàng đòi 650 (+14%); hạ móc xuống 3 hàng cắt được một nửa cái giá đó.
 
 ## Verify phải đổi theo
 

@@ -74,8 +74,8 @@ cùng tên family thì hệ điều hành chỉ giữ một. Lệnh ghi lại c�
 không chỉ nameID 1.
 
 `--ascent` nâng ascent để chừa thêm hàng lưới cho dấu. **Đổi chiều cao dòng của cả font** —
-chỉ dùng khi dấu cần chỗ mà lưới đã hết. Bản Departure Mono Viet dùng `--ascent 650`
-(gốc 550) để chữ hoa đủ chỗ cho dấu hỏi 4 hàng.
+chỉ dùng khi dấu cần chỗ mà lưới đã hết. Bản Departure Mono Viet dùng `--ascent 600`
+(gốc 550) để chữ hoa đủ chỗ cho dấu hỏi 3 hàng.
 
 ## Demo
 
@@ -95,3 +95,9 @@ chỉ thêm một dòng ghi chú phái sinh.
 ## Stack
 
 Python 3.14 (homebrew) · venv `--system-site-packages` · `fontforge` · `fontTools` · `typesafe-sdk`
+
+
+3 hàng
+..##...
+.....#..
+...#..
