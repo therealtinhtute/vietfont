@@ -67,11 +67,24 @@ vietfont proof <out> -o proof.html --layout columns    # proof sheet để duy�
 ```
 
 `verify` là cổng: exit code khác 0 khi font thiếu ký tự, bị flatten chữ nền, lệch mực,
-hoặc có dấu đè chữ nền.
+trùng hình, hoặc có dấu đè chữ nền.
 
 `--family` đổi tên family của font xuất. **Cần dùng khi cài song song font gốc** — hai font
 cùng tên family thì hệ điều hành chỉ giữ một. Lệnh ghi lại cả nameID 16 (typographic family),
 không chỉ nameID 1.
+
+`--ascent` nâng ascent để chừa thêm hàng lưới cho dấu. **Đổi chiều cao dòng của cả font** —
+chỉ dùng khi dấu cần chỗ mà lưới đã hết. Bản Departure Mono Viet dùng `--ascent 650`
+(gốc 550) để chữ hoa đủ chỗ cho dấu hỏi 4 hàng.
+
+## Demo
+
+```bash
+python scripts/make-demo.py     # -> fonts/departure-mono-viet/demo.html
+```
+
+Trang so sánh bốn bản: font gốc chưa Việt hoá, bản móc 2 hàng, bản móc 4 hàng, và bản
+cuối. Font nhúng thẳng dạng data URI nên mở file là xem được, không cần cài gì.
 
 Font gốc là **SIL OFL 1.1**: bản phái sinh giữ nguyên thông báo bản quyền và giấy phép,
 chỉ thêm một dòng ghi chú phái sinh.
