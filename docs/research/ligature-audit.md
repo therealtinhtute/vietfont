@@ -1,6 +1,6 @@
 # Ligature: đo bản cộng đồng, và cái bẫy script `latn`
 
-Ngày: 2026-09-20 · Trạng thái: **chưa dùng được** — cơ chế đã xong, glyph chưa đạt
+Ngày: 2026-09-20 · Trạng thái: **đã bật trong bản phát hành**, chất lượng chưa đều
 
 ## Vấn đề
 
@@ -32,9 +32,9 @@ nhắc ở [departure-mono#12](https://github.com/rektdeckard/departure-mono/iss
 Advance nguồn trải từ 350 (`exclam_equal`) tới 1100 (`less_exclam_hyphen_hyphen`) — không
 theo quy luật nào.
 
-## Hai glyph hỏng hẳn
+## Hai glyph chật — không phải hỏng cấu trúc
 
-`greater_equal` (`>=`) và `less_equal` (`<=`) **thiếu hẳn thành phần `=`**:
+`greater_equal` (`>=`) và `less_equal` (`<=`) **chật**, không phải thiếu thành phần:
 
 ```
 >=  bản cộng đồng        >=  ghép từ glyph gốc
@@ -48,8 +48,17 @@ theo quy luật nào.
    ..####........
 ```
 
-Mực chỉ chiếm x 100..300 trong khi advance cần 700. Hai glyph này vẽ như glyph **một ô**,
-không phải ligature hai ký tự.
+Có gạch ngang dưới — dáng `≥`/`≤` một gạch, đúng quy ước. Vấn đề là bề ngang:
+
+| glyph | mực | advance | lấp |
+|---|---|---|---|
+| `greater_equal` | x 100..300 | 700 | **29%** |
+| `less_equal` | x 100..300 | 700 | **29%** |
+| `equal_equal` | x 0..600 | 700 | 86% |
+| `greater_greater` | x 100..600 | 700 | 71% |
+
+Chiếm 2 ô mà dùng 29% — đúng câu *"insufficient lateral space"* của maintainer, không phải
+lỗi cấu trúc. (Bản ghi đầu của doc này nói "thiếu hẳn dấu `=`" — sai, đã sửa.)
 
 ## Cái bẫy: `mergeFeature` gắn `liga` thiếu script `latn`
 
@@ -121,19 +130,20 @@ Bản cộng đồng fail tầng 2 và 3; bản `mergeFeature` thiếu `latn` fa
 Đo trên bản dựng thử: 818 điểm được snap trên 24 glyph, 26 advance được sửa, và
 `hb-shape --script=latn` ra ligature cho `== != ... ++ && **`.
 
-## Vì sao chưa bật trong bản phát hành
+## Chất lượng còn lại — snap không chữa được
 
-Snap và sửa advance chỉ chữa **hình học**. Chúng không chữa câu thứ ba của maintainer —
-*legibility inconsistencies*. Còn nguyên:
+Snap và sửa advance chỉ chữa **hình học**. Câu thứ ba của maintainer —
+*legibility inconsistencies* — vẫn còn, và người dùng đã xem proof sheet rồi quyết định
+bật:
 
-- `>=` và `<=` thiếu thành phần `=` (hỏng hẳn, không phải chuyện thẩm mỹ);
-- `==`, `--`, `...` không đối xứng và không lấp đầy bề ngang advance;
-- `**`, `***`, `****` nhìn rối ở cỡ nhỏ.
+- `>=` `<=` chật: lấp 29% bề ngang hai ô;
+- `***` `****` rối ở cỡ nhỏ;
+- `==` `--` `...` không đối xứng hoàn toàn.
 
-Nên `DepartureMonoViet-Regular.otf` **vẫn không có ligature**. Muốn bật thì phải vẽ lại
-26 glyph cho đúng lưới và đúng nhịp, rồi duyệt bằng proof sheet — không phải chuyện snap.
+`DepartureMonoViet-Regular.otf` **đã bật 26 ligature** (1288 glyph, 20 feature). Muốn đẹp
+hơn thì phải vẽ lại glyph, không phải snap lại.
 
-## Cách bật khi glyph đã đạt
+## Cách dựng lại
 
 ```bash
 vietfont add <gốc> -o <ra> --marks marks.json --ligatures ligatures.json

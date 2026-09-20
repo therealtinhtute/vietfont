@@ -175,7 +175,7 @@ There is **no lint or format command** — no ruff/mypy/black config is committe
 | `src/vietfont/glyph.py` | Contour read/write, signed area, winding. |
 | `src/vietfont/build.py` | fontforge writes + the fontTools `rename()` patch. |
 | `src/vietfont/judge.py` | Jev client. Read its module docstring before touching it. |
-| `src/vietfont/ligatures.py` | Ligature import: grid snap, advance fix, `liga` feature. Not enabled in the release. |
+| `src/vietfont/ligatures.py` | Ligature import: grid snap, advance fix, `liga` feature. Enabled in the release; glyph quality is uneven. |
 | `src/vietfont/charset.py` | The 134-character target set and Unicode decomposition. |
 | `fonts/departure-mono-viet/marks.json` | Mark geometry. Four keys: `marks`, `compact_marks`, `modifiers`, `compact_modifiers`. |
 | `pyproject.toml` | Hatchling, entry point, deps. |
