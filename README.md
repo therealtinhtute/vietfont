@@ -224,9 +224,10 @@ chỉ dùng khi dấu cần chỗ mà lưới đã hết. Bản Departure Mono V
 (gốc 550) để chữ hoa đủ chỗ cho dấu hỏi 3 hàng.
 
 `--ligatures` ghép ligature lập trình từ một font nguồn: copy glyph, **snap về lưới**, đặt
-advance theo số ô, rồi gắn feature `liga`. Bản phát hành **đã bật** 26 ligature lấy từ bản
+advance theo số ô, rồi gắn feature `liga`. Bản phát hành **đã bật** 25 ligature lấy từ bản
 cộng đồng đã snap. Chất lượng chưa đều — `>=` `<=` chỉ lấp 29% bề ngang, `***` `****` rối ở
-cỡ nhỏ. Xem [`docs/research/ligature-audit.md`](docs/research/ligature-audit.md).
+cỡ nhỏ. Riêng `&&` **không** ghép: hai ký tự `&` gốc giữ nguyên, vì bản cộng đồng vẽ méo.
+Xem [`docs/research/ligature-audit.md`](docs/research/ligature-audit.md).
 
 ## Demo
 

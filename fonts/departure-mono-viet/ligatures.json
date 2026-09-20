@@ -108,14 +108,6 @@
     },
     {
       "from": [
-        "ampersand",
-        "ampersand"
-      ],
-      "to": "ampersand_ampersand",
-      "compose": true
-    },
-    {
-      "from": [
         "plus",
         "plus"
       ],

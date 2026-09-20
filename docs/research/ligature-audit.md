@@ -123,12 +123,35 @@ Bản cộng đồng fail tầng 2 và 3; bản `mergeFeature` thiếu `latn` fa
 
 `src/vietfont/ligatures.py` + `--ligatures <pack.json>` cho cả `add` và `verify`:
 
-- `LigaturePack` đọc `fonts/departure-mono-viet/ligatures.json` (26 quy tắc, sinh từ `legacy/ligatures.fea`);
+- `LigaturePack` đọc `fonts/departure-mono-viet/ligatures.json` (25 quy tắc, sinh từ `legacy/ligatures.fea` trừ `&&`);
 - `add_ligatures()` copy glyph từ font nguồn, **snap mọi điểm về lưới**, đặt advance theo số ô,
   rồi gắn `liga` bằng `mergeFeature` — cách này **giữ nguyên 19 feature** còn lại, khác bản `legacy/`.
 
-Đo trên bản dựng thử: 818 điểm được snap trên 24 glyph, 26 advance được sửa, và
-`hb-shape --script=latn` ra ligature cho `== != ... ++ && **`.
+Đo trên bản dựng thử: 774 điểm được snap trên 23 glyph, 25 advance được sửa, và
+`hb-shape --script=latn` ra ligature cho `== != ... ++ **`.
+
+## Ngoại lệ: `&&` không ghép
+
+Bản cộng đồng vẽ `&&` **méo** — hai dấu `&` chen vào nhau và shape bị bóp:
+
+```
+& gốc (7 ô)        && bản cộng đồng (14 ô)     && giữ nguyên (14 ô)
+..##...            ..##.....##...              ..##.....##...
+.#..#..            .#..#...#..#..              .#..#...#..#..
+.#.....            .#......#.....              .#......#.....
+..#...#            ..#......#....              ..#...#..#...#
+.#..##.            .#.#....#.#...              .#..##..#..##.
+.#..#..            .#..#.#.#..#.#              .#..#...#..#..
+.#..#..            .#...#..#...#.              .#..#...#..#..
+..##...            ..###.#..###.#              ..##.....##...
+```
+
+Cách chữa **không** phải dựng glyph mới, mà là **bỏ quy tắc** khỏi pack. Không có quy tắc
+thì HarfBuzz để nguyên hai ký tự `&` — đúng cái cần, mà không thêm glyph, không thêm GSUB,
+không thêm code.
+
+Hệ quả số đo: pack còn **25 quy tắc** (không phải 26), bản dựng còn **1287 glyph** (không
+phải 1288), và snap còn **774 điểm trên 23 glyph** (không phải 818/24).
 
 ## Chất lượng còn lại — snap không chữa được
 
@@ -140,7 +163,7 @@ bật:
 - `***` `****` rối ở cỡ nhỏ;
 - `==` `--` `...` không đối xứng hoàn toàn.
 
-`DepartureMonoViet-Regular.otf` **đã bật 26 ligature** (1288 glyph, 20 feature). Muốn đẹp
+`DepartureMonoViet-Regular.otf` **đã bật 25 ligature** (1287 glyph, 20 feature). Muốn đẹp
 hơn thì phải vẽ lại glyph, không phải snap lại.
 
 ## Cách dựng lại
