@@ -32,7 +32,7 @@ lưới 10 đơn vị/pixel:
 Đặc điểm: **vòng móc ở trên-trái, nét chạy xuống bên phải, đuôi khoáy về trái ở dưới**.
 Đây là dáng "?" thu nhỏ. Bản 4 hàng của ta giữ đúng cấu trúc đó.
 
-## Chỗ lưới hết chỗ
+## Chỗ lưới hết chỗ — và cách nới
 
 | | dải dấu | hàng trống phía trên | dáng dùng được |
 |---|---|---|---|
@@ -42,14 +42,37 @@ lưới 10 đơn vị/pixel:
 Chữ hoa chỉ có 3 hàng trên cap-height, mà glyph 2 dấu cần dấu thanh + modifier. Nên
 mark đầy đủ không vừa — `_tone_shift` kẹp lại và dấu đè lên nhau.
 
-Sửa: thêm `compact_marks` vào mark pack, đối xứng với `compact_modifiers` đã có.
-`compose` chọn bản thu gọn khi `_fits()` báo mark đầy đủ không nằm được trên vật cản
-mà không vượt đỉnh lưới.
+Bản đầu sửa bằng `compact_marks`: mark pack có thêm bản thu gọn, `compose` chọn bản
+thu gọn khi `_fits()` báo bản đầy đủ không nằm được trên vật cản mà không vượt đỉnh lưới.
 
 ```json
 "marks":         { "hook_above": [ ... 4 hàng ... ] },
-"compact_marks": { "hook_above": [ ... 2 hàng ... ] }
+"compact_marks": { "hook_above": [ ... 3 hàng ... ] }
 ```
+
+Nhưng bản thu gọn vẫn chỉ 2 hàng, và người dùng muốn **mọi dấu hỏi từ 3 hàng trở lên**.
+Không còn cách nào khác ngoài **nâng ascent**: lưới cao thêm thì chữ hoa mới có chỗ.
+
+`--ascent 650` (gốc 550) cho lưới 16 hàng thay vì 14. Kết quả:
+
+| ascent | chiều cao dòng | móc 3 hàng | móc 4 hàng |
+|---|---|---|---|
+| 550 (gốc) | 700 | — | 12 thường |
+| 600 | 750 (+7%) | 16 | 8 |
+| **650** | **800 (+14%)** | **10** | **14** |
+
+Chọn 650: nhiều glyph được móc đủ 4 hàng hơn, và khoảng cách dấu tốt hơn
+(91 glyph gap 1 so với 82).
+
+**Cái giá**: chiều cao dòng tăng 14% cho **cả font**, kể cả các glyph gốc. Đây là đánh
+đổi thật, không phải chi tiết kỹ thuật — chữ sẽ giãn dòng hơn ở mọi nơi dùng font này.
+
+## Verify phải đổi theo
+
+`verify` trước đây lấy `Grid.detect(source)` để tính thiết kế. Nâng ascent làm số hàng
+lưới đổi, nên thiết kế tính trên lưới gốc lệch hàng so với bản dựng thật → báo nhầm
+"mực lệch thiết kế" ở 33 glyph. Sửa: dùng lưới của font **xuất**, đúng cái mà bộ dựng
+đã chạy.
 
 ## Chữ `i` — mark nuốt dấu chấm
 
