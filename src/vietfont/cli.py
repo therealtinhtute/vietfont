@@ -221,6 +221,12 @@ def _run_verify(args: argparse.Namespace) -> int:
                 f"{gap} hàng × {n}" for gap, n in sorted(report.gaps.items())
             )
             print(f"khoảng dấu: {spread}")
+        if report.duplicates:
+            print(f"trùng hình: {len(report.duplicates)} nhóm ký tự ra cùng một hình")
+            for group in report.duplicates:
+                print(f"           {''.join(group)}")
+        else:
+            print("trùng hình: không có")
 
     if source is not None and pack is not None:
         if report.ink_diff:

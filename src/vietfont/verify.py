@@ -30,12 +30,20 @@ class VerifyReport:
     ink_diff: dict[str, tuple[int, int]] = field(default_factory=dict)
     #: Glyph có dấu đè lên chữ nền: ký tự -> số cặp contour chồng.
     collisions: dict[str, int] = field(default_factory=dict)
+    #: Nhóm ký tự ra cùng một hình — dấu này nuốt dấu kia.
+    duplicates: list[list[str]] = field(default_factory=list)
     #: Phân bố khoảng cách dấu–chữ nền: số hàng -> số glyph.
     gaps: dict[int, int] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
-        return not (self.missing or self.flattened or self.ink_diff or self.collisions)
+        return not (
+            self.missing
+            or self.flattened
+            or self.ink_diff
+            or self.collisions
+            or self.duplicates
+        )
 
 
 def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
@@ -50,6 +58,7 @@ def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
     if source is not None:
         report.flattened = _flattened(font, source, report.present)
         report.gaps = _gaps(font, report.present)
+        report.duplicates = _duplicates(font, report.present)
 
     if source is not None and pack is not None:
         grid = Grid.detect(source)
@@ -70,6 +79,21 @@ def _flattened(font, source, present: list[str]) -> list[str]:
         if not all(c in have for c in read_contours(source[ord(base)])):
             out.append(char)
     return out
+
+
+def _duplicates(font, present: list[str]) -> list[list[str]]:
+    """Nhóm ký tự ra cùng một hình.
+
+    Dấu thanh và dấu mũ có thể chen kẽ nhau theo cột mà không chồng hộp bao, nên
+    phép kiểm va chạm không bắt được: ``Ấ`` và ``Ẩ`` ra cùng một hình, ``Ẫ`` mất hẳn
+    dấu mũ và trùng khít ``Ã``. So hình rasterized mới thấy.
+    """
+    grid = Grid.detect(font)
+    seen: dict[frozenset[tuple[int, int]], list[str]] = {}
+    for char in present:
+        key = frozenset(cells(read_contours(font[ord(char)]), grid))
+        seen.setdefault(key, []).append(char)
+    return [group for group in seen.values() if len(group) > 1]
 
 
 def _ink_diff(
