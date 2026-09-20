@@ -22,6 +22,7 @@ from vietfont.glyph import (
 )
 from vietfont.grid import Grid
 from vietfont.marks import MarkPack
+from vietfont.render import cells
 
 
 class ComposeError(Exception):
@@ -66,7 +67,7 @@ def compose(font, char: str, pack: MarkPack, grid: Grid) -> Composition:
 
     # Hết chỗ: chữ HOA chiếm row 3-10, modifier row 0-1, chỉ còn 1 row trống mà
     # tone mark cần 2. Thu gọn modifier xuống 1 row để nhường chỗ cho tone.
-    if mark and _collisions(carrier, shifted):
+    if mark and modifier != "none" and _shares_rows(carrier, shifted, grid):
         compact = _compact_carrier(font, base, modifier, pack)
         if compact is not None:
             carrier = ensure_winding(compact, clockwise=is_clockwise(carrier))
@@ -187,6 +188,19 @@ def _dedupe(mark: list[Contour], carrier: list[Contour]) -> list[Contour]:
     """
     existing = {frozenset(points) for points in carrier}
     return [points for points in mark if frozenset(points) not in existing]
+
+
+def _shares_rows(carrier: list[Contour], mark: list[Contour], grid: Grid) -> bool:
+    """Mark có nằm chung hàng lưới với carrier không.
+
+    Đây mới là phép kiểm đúng cho glyph 2 dấu. Kiểm hộp bao chồng nhau là không đủ:
+    dấu sắc và dấu mũ trên ``Â`` chen kẽ nhau theo cột nên hộp bao chỉ chạm chứ không
+    chồng, trong khi thực tế chúng nằm cùng hàng và hoà thành một khối — ``Ấ`` và
+    ``Ẩ`` ra cùng một hình, ``Ẫ`` mất hẳn dấu mũ.
+    """
+    carrier_rows = {row for row, _ in cells(carrier, grid)}
+    mark_rows = {row for row, _ in cells(mark, grid)}
+    return bool(carrier_rows & mark_rows)
 
 
 def _collisions(
