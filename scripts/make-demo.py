@@ -27,8 +27,10 @@ PACK = ROOT / "fonts/departure-mono-viet/marks.json"
 BUILT = ROOT / "fonts/departure-mono-viet/build/DepartureMonoViet-Regular.otf"
 OUT = ROOT / "fonts/departure-mono-viet/demo.html"
 
-#: Bản đầu tiên sau khi sửa lỗi trùng hình — móc còn 2 hàng.
-OLD_PACK_REV = "HEAD~5"
+#: Bản móc 2 hàng — dấu hỏi còn là tick trên thanh ngang.
+PACK_2ROW_REV = "05d32d6"
+#: Bản móc 4 hàng — dáng Fixedsys thu gọn, nét mảnh.
+PACK_4ROW_REV = "ade5ece"
 
 SAMPLE = "Tôi yêu tiếng nước tôi từ khi mới ra đời"
 
@@ -40,17 +42,22 @@ def build_variants(tmp: Path) -> list[tuple[str, Path, str, str]]:
     def run(*args: str) -> None:
         subprocess.run([str(cli), *args], check=True, capture_output=True)
 
-    old_pack = tmp / "pack-old.json"
-    old_pack.write_text(
-        subprocess.run(
-            ["git", "show", f"{OLD_PACK_REV}:fonts/departure-mono-viet/marks.json"],
-            cwd=ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout,
-        encoding="utf-8",
-    )
+    def pack_at(rev: str, name: str) -> Path:
+        path = tmp / name
+        path.write_text(
+            subprocess.run(
+                ["git", "show", f"{rev}:fonts/departure-mono-viet/marks.json"],
+                cwd=ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout,
+            encoding="utf-8",
+        )
+        return path
+
+    pack_2row = pack_at(PACK_2ROW_REV, "pack-2row.json")
+    pack_4row = pack_at(PACK_4ROW_REV, "pack-4row.json")
 
     variants = [
         (
@@ -75,12 +82,12 @@ def build_variants(tmp: Path) -> list[tuple[str, Path, str, str]]:
             "v3",
             BUILT,
             "Bản cuối",
-            "Mọi dấu hỏi từ 3 hàng trở lên — đổi lại dòng giãn 14%",
+            "Mọi dấu hỏi từ 3 hàng trở lên — đổi lại dòng giãn 7%",
         ),
     ]
 
-    run("add", str(SOURCE), "-o", str(tmp / "v1.otf"), "--marks", str(old_pack))
-    run("add", str(SOURCE), "-o", str(tmp / "v2.otf"), "--marks", str(PACK))
+    run("add", str(SOURCE), "-o", str(tmp / "v1.otf"), "--marks", str(pack_2row))
+    run("add", str(SOURCE), "-o", str(tmp / "v2.otf"), "--marks", str(pack_4row))
 
     # Bản gốc chưa Việt hoá: đổi tên để không lẫn với font đang cài.
     shutil.copy(SOURCE, tmp / "v0.otf")
