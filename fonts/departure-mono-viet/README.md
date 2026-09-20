@@ -7,7 +7,7 @@ Bản Việt hoá của [Departure Mono](https://departuremono.com) — font pix
 | file | vai trò |
 |---|---|
 | `font-src/DepartureMono-Regular.otf` | font gốc — 58/134 ký tự Việt |
-| `research/DepartureMonoLigatures-Regular.otf` | bản có ligature, nguồn để copy glyph ligature |
+| `research/DepartureMonoLigatures-Regular.otf` | bản có ligature, nguồn để copy glyph ligature — **biến thể cộng đồng không chính thức** của [@danicaj3w](https://github.com/danicaj3w/departure-mono), không phải bản phát hành của upstream |
 | `build/DepartureMono-Viet.otf` | **ground truth** — bản Việt hoá dựng tay, 134/134 |
 | `build/DepartureMono-Viet.sfd` | source FontForge của bản trên |
 
