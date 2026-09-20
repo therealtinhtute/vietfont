@@ -240,8 +240,10 @@ Repo này có **hai** giấy phép, theo đúng nguồn gốc của từng phầ
 | **Font** — `fonts/` (font gốc, mark pack, mọi bản dựng) | **SIL OFL 1.1** | [`LICENSE`](LICENSE) |
 | **Code** — `src/`, `scripts/` | MIT | [`LICENSE-MIT`](LICENSE-MIT) |
 
+Ghi chú phái sinh (font gốc, phần đã sửa, phạm vi từng giấy phép): [`NOTICE`](NOTICE).
+
 Font gốc là **SIL OFL 1.1** (© 2022–2024 Helena Zhang) — *không phải MIT*. Bản phái sinh giữ
-nguyên thông báo bản quyền và giấy phép, chỉ thêm một dòng ghi chú phái sinh. OFL 1.1 không
+nguyên thông báo bản quyền và giấy phép trong name table (nameID 0, 13, 14). OFL 1.1 không
 đặt Reserved Font Name, nên tên "Departure Mono Viet" dùng được.
 
 ## Stack
