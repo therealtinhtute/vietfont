@@ -8,7 +8,8 @@ them from base letters + marks, writes them back with fontforge, and verifies th
 deterministic checks.
 
 The concrete result shipped in this repo is **Departure Mono Viet**: 134/134 Vietnamese characters,
-with 134/134 base-letter contours preserved byte-for-byte.
+with all 134 base-letter contours preserved — each one either present identically in the output, or
+with its rasterized pixel footprint fully covered by the output glyph (the `i`-dot case).
 
 The governing design principle, and the thing most likely to be violated by a well-meaning change:
 
@@ -87,7 +88,8 @@ single worst bug in this repo's history: it flattened 76 glyphs into solid recta
 # Setup — --system-site-packages is mandatory (see Runtime/Tooling below)
 uv venv --python /opt/homebrew/bin/python3 --system-site-packages .venv
 VIRTUAL_ENV=.venv uv pip install -e .
-.venv/bin/vietfont --version
+source .venv/bin/activate          # or prefix every command with .venv/bin/
+vietfont --version
 
 # The five commands
 vietfont analyze <font>
@@ -132,8 +134,8 @@ There is **no lint or format command** — no ruff/mypy/black config is committe
 - **No async anywhere.** This is a synchronous CLI; `fontforge` is a blocking C extension.
 - **No DI framework.** Modules take explicit parameters (`compose(font, char, pack, grid)`). Pass
   what a function needs; do not introduce a container.
-- **State lives in frozen dataclasses.** `Grid`, `Analysis`, `Composition`, `MarkPack` are frozen;
-  report types (`VerifyReport`, `BuildReport`) are mutable accumulators.
+- **State lives in dataclasses.** `Grid` and `Analysis` are `frozen=True`; `Composition`,
+  `MarkPack`, `VerifyReport`, and `BuildReport` are mutable.
 - **Errors**: `ComposeError` for composition failures. The CLI catches and reports; it does not
   raise tracebacks at the user.
 - **Exit codes**: `analyze`/`proof` → 0. `add` → 0 if no glyph failed, else 1. `verify` → 0 if
@@ -144,9 +146,12 @@ There is **no lint or format command** — no ruff/mypy/black config is committe
 1. **Winding must match.** Every mark contour must wind the same direction as its carrier
    (`ensure_winding`). Mismatched winding makes the nonzero fill rule cancel the overlap and punch
    holes in the glyph.
-2. **`_dedupe` must run, and must run *after* the row-sharing check.** It drops contours identical to
-   the carrier and absorbs carrier contours that fall inside a mark (the dot of `i`). Run it first
-   and it destroys the evidence the collision check needs.
+2. **`_dedupe` runs *before* `_shares_rows`, and again after compacting.** The actual order in
+   `compose()` is: `_tone_shift` → `_dedupe` → `_shares_rows` → (if rows are shared) compact the
+   carrier → `_dedupe` again. `_dedupe` drops mark contours identical to the carrier and absorbs
+   carrier contours that fall inside a mark (the dot of `i`); `_shares_rows` then decides whether
+   the carrier must be compacted. Note that `docs/research/mark-placement.md` states the opposite
+   order — trust the code, and re-check that doc if you touch this path.
 3. **Never flatten contours.** Preserve every vertex. See `docs/research/ground-truth-flattening.md`.
 4. **Row-sharing, not bounding boxes, for 2-mark uppercase.** Marks interleave by column, so 2D
    bbox tests miss collisions. `_shares_rows()` compares grid-row occupancy and triggers the compact
@@ -207,7 +212,7 @@ The gate is `vietfont verify`, which is deterministic and returns exit 1 on any 
 | Check | Compares | Requires |
 |---|---|---|
 | coverage | target charset vs font cmap | — |
-| `flattened` | base contours vs `--source` | `--source` |
+| `flattened` | base contours vs `--source` — passes if identical *or* pixel footprint covered | `--source` |
 | `duplicates` | rasterized cell sets across glyphs | `--source` |
 | `gaps` | mark-to-base row gap (diagnostic only) | `--source` |
 | `ink_diff` | rasterized cells vs `compose()` expectation | `--source` + `--marks` |
