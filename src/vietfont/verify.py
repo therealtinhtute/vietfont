@@ -61,7 +61,9 @@ def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
         report.duplicates = _duplicates(font, report.present)
 
     if source is not None and pack is not None:
-        grid = Grid.detect(source)
+        # Lưới của font **xuất**, không phải font gốc: nâng ascent đổi số hàng, và
+        # bộ dựng đã chạy trên lưới mới. Lấy lưới gốc thì thiết kế lệch hàng.
+        grid = Grid.detect(font)
         report.ink_diff = _ink_diff(font, source, pack, grid, report.present)
         report.collisions = _collisions(source, pack, grid, report.present)
 
@@ -75,7 +77,7 @@ def _flattened(font, source, present: list[str]) -> list[str]:
     trường hợp sau: dấu chấm nằm đúng dải của mark nên mark nuốt nó — mực vẫn còn,
     chỉ là contour đã gộp. Kiểm bằng contour đơn thuần sẽ báo nhầm là flatten.
     """
-    grid = Grid.detect(source)
+    grid = Grid.detect(font)
     out = []
     for char in present:
         base = cs.decompose(char)[0]

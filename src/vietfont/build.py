@@ -71,6 +71,18 @@ def collisions(font, pack: MarkPack) -> dict[str, int]:
     return found
 
 
+def set_ascent(font, ascent: int) -> None:
+    """Nâng ascent để chừa thêm hàng lưới phía trên chữ hoa.
+
+    Chữ hoa chỉ có 3 hàng trên cap-height — không đủ cho dấu hỏi 4 hàng. Nâng ascent
+    là cách duy nhất, nhưng nó **đổi chiều cao dòng của cả font**: dòng cao thêm đúng
+    phần nâng. Phải nâng cả ba metric, thiếu một cái là hệ điều hành cắt mất phần trên.
+    """
+    font.os2_typoascent = ascent
+    font.hhea_ascent = ascent
+    font.os2_winascent = ascent
+
+
 def rename(
     path: str | Path, family: str, *, style: str = "Regular", note: str | None = None
 ) -> None:

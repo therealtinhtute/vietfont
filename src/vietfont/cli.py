@@ -10,7 +10,7 @@ import fontforge
 from vietfont import __version__
 from vietfont import charset as cs
 from vietfont.analyze import analyze
-from vietfont.build import collisions, extend, rename, save
+from vietfont.build import collisions, extend, rename, save, set_ascent
 from vietfont.grid import Grid
 from vietfont.judge import ADVISORY_THRESHOLD, verify_marks
 from vietfont.marks import MarkPack
@@ -40,6 +40,11 @@ def main(argv: list[str] | None = None) -> int:
     add_cmd.add_argument(
         "--family",
         help="đổi tên family của font xuất (cần khi cài song song font gốc)",
+    )
+    add_cmd.add_argument(
+        "--ascent",
+        type=int,
+        help="nâng ascent để chừa thêm hàng lưới cho dấu (đổi chiều cao dòng)",
     )
 
     judge_cmd = commands.add_parser(
@@ -120,6 +125,8 @@ def _run_add(args: argparse.Namespace) -> int:
     font = fontforge.open(args.font)
     pack = MarkPack.load(args.marks) if args.marks else MarkPack()
 
+    if args.ascent:
+        set_ascent(font, args.ascent)
     report = extend(font, pack)
     save(font, args.output)
     if args.family:
@@ -129,6 +136,8 @@ def _run_add(args: argparse.Namespace) -> int:
 
     print(f"đã thêm  : {len(report.added)} glyph")
     print(f"bỏ qua   : {len(report.skipped)} glyph đã có sẵn")
+    if args.ascent:
+        print(f"ascent   : {args.ascent} (chiều cao dòng đổi theo)")
     if args.family:
         print(f"family   : {args.family}")
     if report.collisions:
