@@ -30,15 +30,21 @@ import fontforge
 
 from vietfont.glyph import Contour
 from vietfont.glyph import contours as read_contours
-from vietfont.glyph import set_contours
+from vietfont.glyph import set_contours, translate
 
 
 @dataclass(frozen=True)
 class Rule:
-    """Một quy tắc thay thế: dãy ký tự nguồn -> glyph ligature."""
+    """Một quy tắc thay thế: dãy ký tự nguồn -> glyph ligature.
+
+    ``compose`` = True nghĩa là **tự dựng** glyph bằng cách đặt các glyph gốc cạnh
+    nhau trên lưới, thay vì lấy dáng của font nguồn. Dùng cho ligature mà bản cộng
+    đồng vẽ méo — ``&&`` chẳng hạn: giữ nguyên dáng ``&`` gốc rồi nhân đôi.
+    """
 
     source: tuple[str, ...]
     target: str
+    compose: bool = False
 
     @property
     def cells(self) -> int:
@@ -58,7 +64,10 @@ class LigaturePack:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         return cls(
             source=raw["source"],
-            rules=[Rule(tuple(r["from"]), r["to"]) for r in raw["rules"]],
+            rules=[
+                Rule(tuple(r["from"]), r["to"], bool(r.get("compose", False)))
+                for r in raw["rules"]
+            ],
         )
 
     def fea(self, only: set[str] | None = None) -> str:
@@ -92,6 +101,8 @@ class LigatureReport:
     dropped: dict[str, int] = field(default_factory=dict)
     #: Glyph không còn contour nào sau khi snap.
     empty: list[str] = field(default_factory=list)
+    #: Glyph tự dựng từ glyph gốc thay vì lấy từ font nguồn.
+    composed: list[str] = field(default_factory=list)
     #: Glyph -> (advance nguồn, advance đã đặt).
     advances: dict[str, tuple[int, int]] = field(default_factory=dict)
 
@@ -132,6 +143,20 @@ def snap(contours: list[Contour], pitch: int) -> tuple[list[Contour], int, int]:
     return out, moved, dropped
 
 
+def compose_from_base(font, rule: Rule, advance: int) -> list[Contour] | None:
+    """Dựng ligature bằng cách đặt các glyph gốc cạnh nhau.
+
+    Giữ nguyên dáng gốc — không lấy dáng của bản cộng đồng. Mỗi glyph thứ ``i`` dịch
+    sang phải ``i × advance``. Trả ``None`` nếu font thiếu glyph gốc.
+    """
+    out: list[Contour] = []
+    for index, name in enumerate(rule.source):
+        if name not in font:
+            return None
+        out += translate(read_contours(font[name]), dx=index * advance)
+    return out
+
+
 def add_ligatures(
     font, pack: LigaturePack, base_dir: str | Path, grid
 ) -> LigatureReport:
@@ -145,15 +170,18 @@ def add_ligatures(
     ``LigatureReport.missing``.
     """
     report = LigatureReport()
+    advance = grid.pitch * grid.cols
+    imported = [r for r in pack.rules if not r.compose]
+    composed = [r for r in pack.rules if r.compose]
+
     source = fontforge.open(str(Path(base_dir) / pack.source))
     try:
-        missing = [r.target for r in pack.rules if r.target not in source]
+        missing = [r.target for r in imported if r.target not in source]
         if missing:
             report.missing = missing
             return report
 
-        advance = grid.pitch * grid.cols
-        for rule in pack.rules:
+        for rule in imported:
             snapped, moved, dropped = snap(read_contours(source[rule.target]), grid.pitch)
             if not snapped:
                 report.empty.append(rule.target)
@@ -172,6 +200,21 @@ def add_ligatures(
                 report.advances[rule.target] = (before, advance * rule.cells)
     finally:
         source.close()
+
+    for rule in composed:
+        contours = compose_from_base(font, rule, advance)
+        if contours is None:
+            report.missing.append(rule.target)
+            continue
+        if rule.target not in font:
+            font.createChar(-1, rule.target)
+        target = font[rule.target]
+        before = int(target.width)
+        set_contours(target, contours, width=advance * rule.cells)
+        report.added.append(rule.target)
+        report.composed.append(rule.target)
+        if before != advance * rule.cells:
+            report.advances[rule.target] = (before, advance * rule.cells)
 
     if not report.added:
         return report
