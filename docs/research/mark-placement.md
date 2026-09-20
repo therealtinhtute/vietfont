@@ -50,9 +50,22 @@ fontforge coi là contour lồng nhau, lật chiều, mất mực.
 
 Sửa: bỏ contour của dấu nếu nó trùng khít với contour đã có trong chữ nền (`_dedupe`).
 
-Việc này **sửa thêm 6 glyph ngoài dự kiến**: `Ẩ Ẫ Ể Ễ Ổ Ỗ` trước đó rơi vào nhánh
-"modifier thu gọn" vì dấu chồng lên modifier; sau khi dedupe, dấu và modifier **xen kẽ**
-nhau (không chồng) nên giữ được modifier đầy đủ và có gap 1.
+## Chỗ doc này từng kết luận sai
+
+Bản đầu của doc viết rằng `_dedupe` "sửa thêm 6 glyph ngoài dự kiến" (`Ẩ Ẫ Ể Ễ Ổ Ỗ`) vì
+sau khi dedupe, dấu và modifier **xen kẽ** nhau nên giữ được modifier đầy đủ.
+
+Sai. Xen kẽ không phải là tốt — nó là **cùng nằm một hàng**. Dấu thanh và dấu mũ chen
+kẽ theo cột, mắt đọc thành một khối, và 6 glyph đó thực ra **trùng hình với bản một dấu**:
+
+```
+Ã Ẫ      Ấ Ẩ      Ẽ Ễ      Ế Ể      Õ Ỗ      Ố Ổ
+```
+
+`Ẫ` mất hẳn dấu mũ. Chi tiết ở [two-mark-uppercase.md](two-mark-uppercase.md).
+
+`_dedupe` vẫn cần — nó là thứ giữ cho `ỉ` không mất mực. Nhưng nó **không được chạy
+trước phép kiểm chồng hàng**, nếu không nó xoá mất bằng chứng rồi phép kiểm báo không có gì.
 
 ## Công thức cuối
 
@@ -71,13 +84,16 @@ Số đo bằng `vietfont verify` (120 glyph có dấu):
 
 | | trước | sau |
 |---|---|---|
-| glyph có gap 1 | 76/120 | **88/120** |
+| glyph có gap 1 | 76/120 | **76/120** |
 | mực khớp thiết kế | 99/120 | **120/120** |
 | base letter giữ contour | 134/134 | **134/134** |
 | coverage | 134/134 | **134/134** |
 
-Còn 32 glyph gap 0, chia làm ba nhóm — cả ba đều đúng, không phải lỗi:
+Còn 44 glyph gap 0, chia làm bốn nhóm — cả bốn đều đúng, không phải lỗi:
 
 - **24 glyph horn** (`ơ ư ớ ờ ở ỡ ợ ứ ừ ử ữ ự` + HOA): horn dính liền chữ, đúng thiết kế.
-- **4 glyph `Ắ Ằ Ẳ Ẵ`**: chữ HOA chiếm hàng 3–10, phía trên còn 3 hàng, cần 4. Hết chỗ thật.
+- **12 glyph HOA 2 dấu** (`Ấ Ầ Ẩ Ẫ Ậ Ế Ề Ể Ễ Ệ Ố Ồ Ổ Ỗ Ộ` và nhóm `Ă`): modifier thu gọn
+  1 hàng nằm liền trên cap-height, nhường 2 hàng trên cùng cho dấu thanh. Xem
+  [two-mark-uppercase.md](two-mark-uppercase.md).
 - **4 glyph `ì í ĩ ỉ`**: đúng convention của font cho chữ `i` (dấu ngang hàng dấu chấm).
+- **4 glyph `Ắ Ằ Ẳ Ẵ`**: chữ HOA chiếm hàng 3–10, phía trên còn 3 hàng, cần 4. Hết chỗ thật.
