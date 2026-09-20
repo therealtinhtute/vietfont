@@ -46,20 +46,24 @@ sắc   ....#..      hỏi (bản sai)   ..##...
 Nhìn ra ngay là lạc lõng: dấu hỏi thành một khối, các dấu khác là nét mảnh. Người dùng
 bắt đúng chỗ này — *"không nên có 2 dọc 1 lần, chỉ là đường nét đơn như các dấu khác"*.
 
-## Dáng cuối — nét đơn
+## Dáng cuối — vòng xoáy nét mảnh
 
 ```
 ả  (4 hàng)        Ả  (4 hàng)
+   ..##...            ..##...
+   .#..#..            .#..#..
+   ....#..            ....#..
    ...#...            ...#...
-   ...#...            ...#...
-   ..#....            ..#....
-   .#.....            .#.....
 ```
 
-Một nét duy nhất: **xuống 2 hàng rồi khoáy sang trái**. Giữ được đặc trưng của dấu hỏi
-(có đoạn xuống rồi mới móc) mà vẫn mảnh như `á à ã`.
+Thanh ngang trên, hai bên rủ xuống, rồi khoáy vào trong. Giữ đúng cấu trúc của
+Fixedsys (vòng móc trên-trái, nét xuống bên phải, đuôi khoáy vào) nhưng **mỗi đoạn
+1 pixel** — mảnh như `á à ã`.
 
 Bản thu gọn 3 hàng bỏ hàng đuôi cuối, dùng khi chữ hoa 2 dấu hết chỗ.
+
+Chữ `i` chỉ được 3 hàng: hàng đuôi của móc trùng khít dấu chấm nên `_dedupe` gộp
+chúng làm một — đúng convention của font gốc.
 
 ## Chỗ lưới hết chỗ — và cách nới
 
