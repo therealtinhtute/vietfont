@@ -1,0 +1,197 @@
+{
+  "source": "research/DepartureMonoLigatures-Regular.otf",
+  "rules": [
+    {
+      "from": [
+        "period",
+        "period",
+        "period"
+      ],
+      "to": "period_period_period"
+    },
+    {
+      "from": [
+        "exclam",
+        "equal",
+        "equal"
+      ],
+      "to": "exclam_equal_equal"
+    },
+    {
+      "from": [
+        "exclam",
+        "equal"
+      ],
+      "to": "exclam_equal"
+    },
+    {
+      "from": [
+        "asterisk",
+        "asterisk",
+        "asterisk",
+        "asterisk"
+      ],
+      "to": "star_star_star_star"
+    },
+    {
+      "from": [
+        "asterisk",
+        "asterisk",
+        "asterisk"
+      ],
+      "to": "asterisk_asterisk_asterisk"
+    },
+    {
+      "from": [
+        "asterisk",
+        "slash"
+      ],
+      "to": "asterisk_slash"
+    },
+    {
+      "from": [
+        "asterisk",
+        "asterisk"
+      ],
+      "to": "asterisk_asterisk"
+    },
+    {
+      "from": [
+        "slash",
+        "greater"
+      ],
+      "to": "slash_greater"
+    },
+    {
+      "from": [
+        "slash",
+        "asterisk"
+      ],
+      "to": "slash_asterisk"
+    },
+    {
+      "from": [
+        "hyphen",
+        "hyphen",
+        "greater"
+      ],
+      "to": "hyphen_hyphen_greater"
+    },
+    {
+      "from": [
+        "hyphen",
+        "hyphen",
+        "hyphen"
+      ],
+      "to": "hyphen_hyphen_hyphen"
+    },
+    {
+      "from": [
+        "hyphen",
+        "hyphen"
+      ],
+      "to": "hyphen_hyphen"
+    },
+    {
+      "from": [
+        "hyphen",
+        "greater"
+      ],
+      "to": "hyphen_greater"
+    },
+    {
+      "from": [
+        "underscore",
+        "underscore"
+      ],
+      "to": "underscore_underscore"
+    },
+    {
+      "from": [
+        "ampersand",
+        "ampersand"
+      ],
+      "to": "ampersand_ampersand"
+    },
+    {
+      "from": [
+        "plus",
+        "plus"
+      ],
+      "to": "plus_plus"
+    },
+    {
+      "from": [
+        "equal",
+        "equal",
+        "equal"
+      ],
+      "to": "equal_equal_equal"
+    },
+    {
+      "from": [
+        "equal",
+        "equal"
+      ],
+      "to": "equal_equal"
+    },
+    {
+      "from": [
+        "equal",
+        "greater"
+      ],
+      "to": "equal_greater"
+    },
+    {
+      "from": [
+        "greater",
+        "greater"
+      ],
+      "to": "greater_greater"
+    },
+    {
+      "from": [
+        "greater",
+        "equal"
+      ],
+      "to": "greater_equal"
+    },
+    {
+      "from": [
+        "less",
+        "exclam",
+        "hyphen",
+        "hyphen"
+      ],
+      "to": "less_exclam_hyphen_hyphen"
+    },
+    {
+      "from": [
+        "less",
+        "hyphen"
+      ],
+      "to": "less_hypen"
+    },
+    {
+      "from": [
+        "less",
+        "slash"
+      ],
+      "to": "less_slash"
+    },
+    {
+      "from": [
+        "less",
+        "less"
+      ],
+      "to": "less_less"
+    },
+    {
+      "from": [
+        "less",
+        "equal"
+      ],
+      "to": "less_equal"
+    }
+  ]
+}

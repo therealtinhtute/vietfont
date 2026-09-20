@@ -13,6 +13,7 @@ from vietfont.analyze import analyze
 from vietfont.build import collisions, extend, rename, save, set_ascent
 from vietfont.grid import Grid
 from vietfont.judge import ADVISORY_THRESHOLD, verify_marks
+from vietfont.ligatures import LigaturePack, add_ligatures
 from vietfont.marks import MarkPack
 from vietfont.proof import LAYOUTS, ProofFont, ProofSheet
 from vietfont.verify import verify
@@ -45,6 +46,10 @@ def main(argv: list[str] | None = None) -> int:
         "--ascent",
         type=int,
         help="nâng ascent để chừa thêm hàng lưới cho dấu (đổi chiều cao dòng)",
+    )
+    add_cmd.add_argument(
+        "--ligatures",
+        help="ligature pack JSON — ghép ligature lập trình từ font nguồn",
     )
 
     judge_cmd = commands.add_parser(
@@ -83,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
     verify_cmd.add_argument("font", help="đường dẫn font cần kiểm")
     verify_cmd.add_argument("--source", help="font gốc, để kiểm shape và mực")
     verify_cmd.add_argument("--marks", help="mark pack JSON, để kiểm mực và va chạm")
+    verify_cmd.add_argument(
+        "--ligatures", help="ligature pack JSON, để kiểm lưới và nhịp monospace"
+    )
 
     args = parser.parse_args(argv)
     if args.command == "analyze":
@@ -128,6 +136,14 @@ def _run_add(args: argparse.Namespace) -> int:
     if args.ascent:
         set_ascent(font, args.ascent)
     report = extend(font, pack)
+
+    ligatures = None
+    if args.ligatures:
+        ligature_pack = LigaturePack.load(args.ligatures)
+        ligatures = add_ligatures(
+            font, ligature_pack, Path(args.ligatures).parent, Grid.detect(font)
+        )
+
     save(font, args.output)
     if args.family:
         rename(
@@ -140,6 +156,15 @@ def _run_add(args: argparse.Namespace) -> int:
         print(f"ascent   : {args.ascent} (chiều cao dòng đổi theo)")
     if args.family:
         print(f"family   : {args.family}")
+    if ligatures is not None:
+        print(f"ligature : {len(ligatures.added)} glyph, feature liga đã gắn")
+        if ligatures.snapped:
+            total = sum(ligatures.snapped.values())
+            print(f"           snap lưới: {total} điểm trên {len(ligatures.snapped)} glyph")
+        if ligatures.advances:
+            print(f"           sửa advance: {len(ligatures.advances)} glyph")
+        if ligatures.missing:
+            print(f"           thiếu trong font nguồn: {', '.join(ligatures.missing)}")
     if report.collisions:
         print(f"va chạm  : {len(report.collisions)} glyph có dấu đè lên chữ nền")
         for char, count in sorted(report.collisions.items()):
@@ -149,7 +174,8 @@ def _run_add(args: argparse.Namespace) -> int:
         for char, reason in sorted(report.failed.items()):
             print(f"           {char}  {reason}")
     print(f"xuất     : {args.output}")
-    return 0 if report.ok else 1
+    ok = report.ok and (ligatures is None or ligatures.ok)
+    return 0 if ok else 1
 
 
 def _run_judge(args: argparse.Namespace) -> int:
@@ -212,8 +238,9 @@ def _run_verify(args: argparse.Namespace) -> int:
     font = fontforge.open(args.font)
     source = fontforge.open(args.source) if args.source else None
     pack = MarkPack.load(args.marks) if args.marks else None
+    ligatures = LigaturePack.load(args.ligatures) if args.ligatures else None
 
-    report = verify(font, source=source, pack=pack)
+    report = verify(font, source=source, pack=pack, ligatures=ligatures, path=args.font)
 
     print(f"font     : {args.font}")
     print(f"coverage : {len(report.present)}/{report.total}")
@@ -249,6 +276,14 @@ def _run_verify(args: argparse.Namespace) -> int:
             print(f"           {' '.join(sorted(report.collisions))}")
         else:
             print("va chạm  : không có")
+
+    if ligatures is not None:
+        if report.ligatures:
+            print(f"ligature : {len(report.ligatures)} glyph hỏng")
+            for name, why in sorted(report.ligatures.items()):
+                print(f"           {name}  {why}")
+        else:
+            print(f"ligature : {len(ligatures.rules)} glyph trên lưới, đúng nhịp")
 
     print()
     print("ĐẠT" if report.ok else "KHÔNG ĐẠT")

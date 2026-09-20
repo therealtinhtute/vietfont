@@ -34,6 +34,8 @@ class VerifyReport:
     duplicates: list[list[str]] = field(default_factory=list)
     #: Phân bố khoảng cách dấu–chữ nền: số hàng -> số glyph.
     gaps: dict[int, int] = field(default_factory=dict)
+    #: Ligature hỏng: glyph -> lý do (thiếu, lệch lưới, sai advance).
+    ligatures: dict[str, str] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -43,11 +45,18 @@ class VerifyReport:
             or self.ink_diff
             or self.collisions
             or self.duplicates
+            or self.ligatures
         )
 
 
-def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
-    """Kiểm tra ``font``. Truyền ``source`` (và ``pack``) để kiểm sâu hơn."""
+def verify(
+    font, *, source=None, pack: MarkPack | None = None, ligatures=None, path=None
+) -> VerifyReport:
+    """Kiểm tra ``font``. Truyền ``source`` (và ``pack``) để kiểm sâu hơn.
+
+    ``path`` là đường dẫn file của ``font`` — cần khi kiểm ligature, vì phép kiểm
+    đó phải đọc bảng GSUB của file đã lưu.
+    """
     target = cs.charset()
     report = VerifyReport(
         total=len(target),
@@ -66,6 +75,11 @@ def verify(font, *, source=None, pack: MarkPack | None = None) -> VerifyReport:
         grid = Grid.detect(font)
         report.ink_diff = _ink_diff(font, source, pack, grid, report.present)
         report.collisions = _collisions(source, pack, grid, report.present)
+
+    if ligatures is not None:
+        if path is None:
+            raise ValueError("kiểm ligature cần đường dẫn file font (path=)")
+        report.ligatures = _ligatures(font, ligatures, Grid.detect(font), path)
 
     return report
 
@@ -143,6 +157,94 @@ def _collisions(
             continue
         if result.collisions:
             out[char] = len(result.collisions)
+    return out
+
+
+def _liga_substitutions(path) -> tuple[dict[tuple[str, ...], str], set[str]]:
+    """Dãy glyph nguồn -> glyph ligature, cùng các script KHÔNG bật ``liga``.
+
+    Phải kiểm theo từng script: ``mergeFeature`` có thể đăng ký ``liga`` dưới
+    ``DFLT`` mà quên ``latn``. Khi đó ``hb-shape --script=latn`` không thay thế, và
+    trình duyệt dùng ``latn`` cho ``==`` nên ligature không bao giờ chạy — dù lookup
+    vẫn nằm nguyên trong bảng GSUB.
+    """
+    from fontTools.ttLib import TTFont
+
+    font = TTFont(str(path))
+    gsub = font.get("GSUB")
+    if gsub is None:
+        return {}, set()
+    table = gsub.table
+    liga = {
+        i
+        for i, record in enumerate(table.FeatureList.FeatureRecord)
+        if record.FeatureTag == "liga"
+    }
+
+    per_script: dict[str, set[int]] = {}
+    for script in table.ScriptList.ScriptRecord:
+        systems = [script.Script.DefaultLangSys]
+        systems += [record.LangSys for record in script.Script.LangSysRecord]
+        enabled: set[int] = set()
+        for system in systems:
+            if system is not None:
+                enabled.update(i for i in system.FeatureIndex if i in liga)
+        per_script[script.ScriptTag] = enabled
+
+    missing = {tag for tag, indices in per_script.items() if not indices}
+    common = set.intersection(*per_script.values()) if per_script else set()
+
+    lookups: set[int] = set()
+    for i in common:
+        lookups.update(table.FeatureList.FeatureRecord[i].Feature.LookupListIndex)
+
+    out: dict[tuple[str, ...], str] = {}
+    for index in lookups:
+        for sub in table.LookupList.Lookup[index].SubTable:
+            for first, ligatures in getattr(sub, "ligatures", {}).items():
+                for ligature in ligatures:
+                    out[(first, *ligature.Component)] = ligature.LigGlyph
+    return out, missing
+
+
+def _ligatures(font, pack, grid: Grid, path) -> dict[str, str]:
+    """Ligature phải được GSUB thay thế, có mặt, nằm trên lưới, đúng nhịp.
+
+    Ba nhóm lỗi thật đã gặp: bản cộng đồng lệch lưới (24/26) và sai advance (25/26);
+    ``mergeFeature`` gắn ``liga`` thiếu script ``latn``.
+    """
+    out: dict[str, str] = {}
+    advance = grid.pitch * grid.cols
+    substitutions, missing_scripts = _liga_substitutions(path)
+
+    if missing_scripts:
+        return {
+            "liga": f"feature không bật cho script {', '.join(sorted(missing_scripts))}"
+        }
+
+    for rule in pack.rules:
+        key = tuple(rule.source)
+        if key not in substitutions:
+            out[rule.target] = "GSUB không thay thế dãy này"
+            continue
+        if substitutions[key] != rule.target:
+            out[rule.target] = f"GSUB trỏ sai: {substitutions[key]}"
+            continue
+        if rule.target not in font:
+            out[rule.target] = "thiếu glyph"
+            continue
+        glyph = font[rule.target]
+        points = [(x, y) for c in read_contours(glyph) for (x, y) in c]
+        if not points:
+            out[rule.target] = "glyph rỗng"
+            continue
+        off = [p for p in points if p[0] % grid.pitch or p[1] % grid.pitch]
+        if off:
+            out[rule.target] = f"{len(off)}/{len(points)} điểm lệch lưới"
+            continue
+        want = advance * rule.cells
+        if int(glyph.width) != want:
+            out[rule.target] = f"advance {int(glyph.width)} != {want}"
     return out
 
 

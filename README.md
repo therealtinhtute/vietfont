@@ -154,6 +154,7 @@ scripts/make-demo.py        dựng demo.html
 | `compose.py` | dựng candidate từ base + modifier + tone; snap grid; chọn bản vừa lưới |
 | `render.py` | glyph → lưới text `#`/`.` |
 | `judge.py` | TypeSafe client; build câu hỏi; batch; ngưỡng confidence |
+| `ligatures.py` | Ligature lập trình: copy glyph nguồn, snap lưới, sửa advance, gắn `liga` |
 | `build.py` | ghi glyph, đổi tên family, nâng ascent, generate font |
 | `verify.py` | cổng tất định: coverage, giữ contour, mực, va chạm |
 | `proof.py` | proof sheet HTML + review queue |
@@ -221,6 +222,11 @@ không chỉ nameID 1.
 `--ascent` nâng ascent để chừa thêm hàng lưới cho dấu. **Đổi chiều cao dòng của cả font** —
 chỉ dùng khi dấu cần chỗ mà lưới đã hết. Bản Departure Mono Viet dùng `--ascent 600`
 (gốc 550) để chữ hoa đủ chỗ cho dấu hỏi 3 hàng.
+
+`--ligatures` ghép ligature lập trình từ một font nguồn: copy glyph, **snap về lưới**, đặt
+advance theo số ô, rồi gắn feature `liga`. Bản phát hành **chưa bật** — glyph của bản cộng
+đồng chưa đạt (24/26 lệch lưới, 25/26 sai nhịp, `>=` `<=` thiếu thành phần `=`). Xem
+[`docs/research/ligature-audit.md`](docs/research/ligature-audit.md).
 
 ## Demo
 

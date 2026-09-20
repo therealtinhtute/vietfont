@@ -8,8 +8,8 @@ them from base letters + marks, writes them back with fontforge, and verifies th
 deterministic checks.
 
 The concrete result shipped in this repo is **Departure Mono Viet**: 134/134 Vietnamese characters,
-with all 134 base-letter contours preserved — each one either present identically in the output, or
-with its rasterized pixel footprint fully covered by the output glyph (the `i`-dot case).
+with all 134 target glyphs passing base-shape preservation — each base contour is either present
+identically in the output, or its rasterized pixel footprint is fully covered (the `i`-dot case).
 
 The governing design principle, and the thing most likely to be violated by a well-meaning change:
 
@@ -159,6 +159,10 @@ There is **no lint or format command** — no ruff/mypy/black config is committe
 5. **`set_ascent` must update three fields together**: `os2_typoascent`, `hhea_ascent`,
    `os2_winascent`. Different OSes clip from different tables.
 6. **`rename` must update nameID 1 *and* 16** (plus 2, 3, 4, 6, 17). macOS keys on 16.
+7. **A generated `.fea` must declare `languagesystem latn dflt;`, not just `DFLT`.** With only
+   `DFLT`, `liga` lands in the GSUB and `hb-shape` (default script) substitutes — but browsers
+   resolve Latin text to `latn` and never ligate. `hb-shape --script=latn` is the test that
+   catches it. See `docs/research/ligature-audit.md`.
 
 ## Important Files
 
@@ -171,6 +175,7 @@ There is **no lint or format command** — no ruff/mypy/black config is committe
 | `src/vietfont/glyph.py` | Contour read/write, signed area, winding. |
 | `src/vietfont/build.py` | fontforge writes + the fontTools `rename()` patch. |
 | `src/vietfont/judge.py` | Jev client. Read its module docstring before touching it. |
+| `src/vietfont/ligatures.py` | Ligature import: grid snap, advance fix, `liga` feature. Not enabled in the release. |
 | `src/vietfont/charset.py` | The 134-character target set and Unicode decomposition. |
 | `fonts/departure-mono-viet/marks.json` | Mark geometry. Four keys: `marks`, `compact_marks`, `modifiers`, `compact_modifiers`. |
 | `pyproject.toml` | Hatchling, entry point, deps. |
@@ -217,9 +222,10 @@ The gate is `vietfont verify`, which is deterministic and returns exit 1 on any 
 | `gaps` | mark-to-base row gap (diagnostic only) | `--source` |
 | `ink_diff` | rasterized cells vs `compose()` expectation | `--source` + `--marks` |
 | `collisions` | mark/base contour overlap | `--source` + `--marks` |
+| `ligatures` | GSUB substitution + on-grid + advance = `pitch × cols × n` | `--ligatures` (+ `path`) |
 
-`VerifyReport.ok` is `not (missing or flattened or ink_diff or collisions or duplicates)`. Note
-`gaps` is a histogram, not a failure condition.
+`VerifyReport.ok` is `not (missing or flattened or ink_diff or collisions or duplicates or
+ligatures)`. Note `gaps` is a histogram, not a failure condition.
 
 **Run `verify` with both `--source` and `--marks`.** Without them it degrades to a shallow codepoint
 presence check that will happily pass a broken font.
